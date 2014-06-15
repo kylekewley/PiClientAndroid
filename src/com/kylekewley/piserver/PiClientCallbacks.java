@@ -8,6 +8,9 @@ import java.net.InetAddress;
  * Created by Kyle Kewley on 6/13/14.
  */
 public interface PiClientCallbacks {
+    enum ClientErrorCode {
+        DISCONNECTED_CLIENT
+    }
 
     /**
      * This method is called when the client successfully connects to the PiServer host.
@@ -47,5 +50,5 @@ public interface PiClientCallbacks {
      * @param errorNumber   The error number associated with the error
      * @param errorMessage  The human readable error message
      */
-    void clientRaisedError(PiClient piClient, int errorNumber, String errorMessage);
+    void clientRaisedError(PiClient piClient, ClientErrorCode errorNumber, String errorMessage);
 }

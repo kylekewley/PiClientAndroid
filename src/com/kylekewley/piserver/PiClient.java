@@ -203,13 +203,13 @@ public class PiClient implements PiClientCallbacks {
     public void close() {
         if (clientHelper != null && clientHelper.isConnected()) {
             clientHelper.close();
+            clientHelperThread.interrupt();
 
             try {
                 clientHelperThread.join(DEFAULT_THREAD_TIMEOUT);
             }catch (Exception e) {
                 System.out.println("Exception while joining client helper thread: " + e.getMessage());
             }
-
 
         }
     }
@@ -483,7 +483,7 @@ public class PiClient implements PiClientCallbacks {
          * This method should only be called after the socket is connected.
          */
         private void waitForData() {
-            while (socket != null && !socket.isClosed()) {
+            while (socket != null && !socket.isClosed() && !Thread.currentThread().isInterrupted()) {
 
             }
         }

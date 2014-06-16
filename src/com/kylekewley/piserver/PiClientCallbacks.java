@@ -2,15 +2,38 @@ package com.kylekewley.piserver;
 
 import com.kylekewley.piserver.PiClient;
 
-import java.net.InetAddress;
+import java.util.HashMap;
 
 /**
  * Created by Kyle Kewley on 6/13/14.
  */
 public interface PiClientCallbacks {
     enum ClientErrorCode {
-        DISCONNECTED_CLIENT
+        DISCONNECTED_CLIENT ("The client is disconnected and unable to send data."),
+        INVALID_PORT ("The port number must be between 0 and 65535."),
+        INVALID_HOSTNAME ("The PiClient was unable to resolve the hostname"),
+        SECURITY_EXCEPTION ("The PiClient was unable to resolve the hostname because security manager is present and permission to resolve the host name is denied."),
+        UNKNOWN_CONNECTION_ERROR ("An unknown error occurred while trying to connect. Please check your hostname and IP address."),
+        CONNECTION_TIMEOUT ("The connection timed out while trying to connect to the PiServer");
+
+        private String errorMessage;
+
+        ClientErrorCode(String errorMessage) {
+            this.errorMessage= errorMessage;
+        }
+
+        public String getErrorMessage() {
+            return errorMessage;
+        }
+
+        public void setErrorMessage(String message) {
+            if (message != null)
+                errorMessage = message;
+        }
     }
+
+
+    public HashMap<PiClientCallbacks, String> humanReadableErrors = new HashMap<PiClientCallbacks, String>();
 
     /**
      * This method is called when the client successfully connects to the PiServer host.
@@ -46,9 +69,19 @@ public interface PiClientCallbacks {
      * Called if there is an error sent by the server. As of now, this method is not being
      * used because parsing errors are sent back and handled by the PiMessage object that caused them.
      *
-     * @param piClient      The client that raised the error
-     * @param errorNumber   The error number associated with the error
-     * @param errorMessage  The human readable error message
+     * @param piClient      The client that raised the error.
+     * @param error         The error code associated with the error.
      */
-    void clientRaisedError(PiClient piClient, ClientErrorCode errorNumber, String errorMessage);
+    void clientRaisedError(PiClient piClient, ClientErrorCode error);
+
+
+    /**
+     * Called if there is an exception raised where we don't know how to deal with it.
+     * This is more of a debugging tool and will only be called for exceptions that I don't understand.
+     * Hopefully after testing, I won't have to use this callback.
+     *
+     * @param piClient      The client that raised the error.
+     * @param error         The Exception that was raised.
+     */
+    void clientRaisedError(PiClient piClient, Exception error);
 }

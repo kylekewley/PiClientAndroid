@@ -3,6 +3,8 @@ package com.kylekewley.piserver;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
+import java.util.ArrayList;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
  * Created by Kyle Kewley on 6/11/14.
@@ -203,7 +205,6 @@ public class PiClient implements PiClientCallbacks {
     public void close() {
         if (clientHelper != null && clientHelper.isConnected()) {
             clientHelper.close();
-            clientHelperThread.interrupt();
 
             try {
                 clientHelperThread.join(DEFAULT_THREAD_TIMEOUT);
@@ -227,7 +228,7 @@ public class PiClient implements PiClientCallbacks {
      * @param message
      */
     public void sendMessage(PiMessage message) {
-        //TODO: implement method
+        clientHelper.sendMessage(message);
     }
 
 
@@ -312,6 +313,12 @@ public class PiClient implements PiClientCallbacks {
         ///The socket that will be used to connect to the PiServer.
         private Socket socket;
 
+        ///The queue of messages for the PiClient to send to the server
+        private ConcurrentLinkedQueue<PiMessage> messageQueue = new ConcurrentLinkedQueue<PiMessage>();
+
+        ///The list that holds sent messages waiting for a reply
+        private ArrayList<PiMessage> sentMessages = new ArrayList<PiMessage>();
+
         /*
         Constructors
          */
@@ -378,6 +385,22 @@ public class PiClient implements PiClientCallbacks {
                 return false;
 
             return socket.isConnected();
+        }
+
+
+        /*
+        Sending Messages
+         */
+
+
+        public void sendMessage(PiMessage message) {
+            if (clientHelperThread.isInterrupted() || !isConnected()) {
+                //We are closed
+                clientCallbacks.clientRaisedError(PiClient.this, ClientErrorCode.DISCONNECTED_CLIENT);
+                return;
+            }
+
+            messageQueue.add(message);
         }
 
 
@@ -483,7 +506,7 @@ public class PiClient implements PiClientCallbacks {
          * This method should only be called after the socket is connected.
          */
         private void waitForData() {
-            while (socket != null && !socket.isClosed() && !Thread.currentThread().isInterrupted()) {
+            while (!Thread.currentThread().isInterrupted()) {
 
             }
         }
@@ -491,13 +514,20 @@ public class PiClient implements PiClientCallbacks {
 
         private void close() {
             if (isConnected() && socket != null) {
+                clientHelperThread.interrupt();
+
                 try {
                     socket.close();
                 }catch (Exception e) {
-
+                    System.out.print("Error closing socket: " + e.getMessage());
                 }
 
-                //TODO: Clear the queue
+
+                messageQueue.clear();
+                sentMessages.clear();
+
+                //TODO: Reset the ServerManager once we create the class.
+
                 //The main thread should now be able to call join()
             }
         }

@@ -1,5 +1,9 @@
-package com.kylekewley.piserver;
+package com.kylekewley.piclient;
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
+import java.net.ConnectException;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
@@ -47,10 +51,19 @@ public class PiClient implements PiClientCallbacks {
 
 
     ///The PiClientHelper running on a secondary thread.
+    @Nullable
     private PiClientHelper clientHelper;
 
     ///The Thread object that is running the PiClientHelper.
+    @Nullable
     private Thread clientHelperThread;
+
+
+    ///The name of the host or IP address to connect to.
+    private String hostName;
+
+    ///The port number to connect to on the remote host.
+    private int port;
 
 
     /*
@@ -84,6 +97,8 @@ public class PiClient implements PiClientCallbacks {
      * @param clientCallbacks   The object that will handle error messages and status updates.
      */
     PiClient(String hostName, int port, PiClientCallbacks clientCallbacks) {
+        this.hostName = hostName;
+        this.port = port;
         this.clientCallbacks = clientCallbacks;
 
         connectToPiServer(hostName, port);
@@ -166,7 +181,7 @@ public class PiClient implements PiClientCallbacks {
      * @param hostName  The IP address.
      * @param port      The port number.
      */
-    public void connectToPiServer(String hostName, int port) {
+    public void connectToPiServer(@Nullable String hostName, int port) {
 
         //Make sure the port is valid
         if (port <= 0 || port > MAX_PORT) {
@@ -194,7 +209,8 @@ public class PiClient implements PiClientCallbacks {
      * Disconnect and connect back to the host the PiClient was previously connected to.
      */
     public void reconnectToPiServer() {
-        //TODO: implement method
+        close();
+        connectToPiServer(this.hostName, this.port);
     }
 
 
@@ -225,7 +241,8 @@ public class PiClient implements PiClientCallbacks {
      * Sends the PiMessage object to the PiServer.
      * If the PiClient is not connected, the DISCONNECTED_CLIENT error
      * will be sent to the clientCallbacks object.
-     * @param message
+     *
+     * @param message   The message to send to the server.
      */
     public void sendMessage(PiMessage message) {
         clientHelper.sendMessage(message);
@@ -289,12 +306,12 @@ public class PiClient implements PiClientCallbacks {
     }
 
     @Override
-    public void clientRaisedError(PiClient piClient, ClientErrorCode error) {
+    public void clientRaisedError(PiClient piClient, @NotNull ClientErrorCode error) {
         System.out.println(error.getErrorMessage());
     }
 
     @Override
-    public void clientRaisedError(PiClient piClient, Exception error) {
+    public void clientRaisedError(PiClient piClient, @NotNull Exception error) {
         System.out.print(error.getMessage());
     }
 
@@ -304,19 +321,15 @@ public class PiClient implements PiClientCallbacks {
 
     private class PiClientHelper implements Runnable {
 
-        ///The name of the host or IP address to connect to.
-        private String hostName;
-
-        ///The port number to connect to on the remote host.
-        private int port;
-
         ///The socket that will be used to connect to the PiServer.
         private Socket socket;
 
         ///The queue of messages for the PiClient to send to the server
+        @NotNull
         private ConcurrentLinkedQueue<PiMessage> messageQueue = new ConcurrentLinkedQueue<PiMessage>();
 
         ///The list that holds sent messages waiting for a reply
+        @NotNull
         private ArrayList<PiMessage> sentMessages = new ArrayList<PiMessage>();
 
         /*
@@ -330,8 +343,8 @@ public class PiClient implements PiClientCallbacks {
          * @param port          The port number.
          */
         PiClientHelper(String hostName, int port) {
-            this.port = port;
-            this.hostName = hostName;
+            PiClient.this.port = port;
+            PiClient.this.hostName = hostName;
         }
 
 
@@ -341,7 +354,7 @@ public class PiClient implements PiClientCallbacks {
         @Override
         public void run() {
             //We have a valid hostName and port as far as we can tell
-            boolean connected = connectToPiServer(this.hostName, this.port);
+            boolean connected = connectToPiServer(PiClient.this.hostName, PiClient.this.port);
 
             if (connected) {
                 //Send and receive data
@@ -380,7 +393,6 @@ public class PiClient implements PiClientCallbacks {
          * @return  true if the PiClientHelper is currently connected to a PiServer
          */
         public boolean isConnected() {
-            //TODO: Implement method
             if (socket == null || socket.isClosed())
                 return false;
 
@@ -451,12 +463,15 @@ public class PiClient implements PiClientCallbacks {
             try {
                 socket.connect(address, connectionTimeout);
 
-                //No errors raised
+                //We made the connection.
+                clientCallbacks.clientConnectedToHost(PiClient.this);
                 return true;
 
-            }catch (SocketTimeoutException e) {
+            } catch (SocketTimeoutException e) {
                 clientCallbacks.clientRaisedError(PiClient.this, ClientErrorCode.CONNECTION_TIMEOUT);
-            }catch (Exception e) {
+            } catch (ConnectException e) {
+                clientCallbacks.clientRaisedError(PiClient.this, ClientErrorCode.CONNECTION_REFUSED);
+            } catch (Exception e) {
 
                 //Catch IOException, IllegalBlockingModeException, and IllegalArgumentException because
                 //I don't know exactly what they mean. I expect that IllegalArgumentException will never get called

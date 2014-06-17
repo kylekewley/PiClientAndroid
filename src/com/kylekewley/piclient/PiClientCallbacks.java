@@ -1,6 +1,6 @@
-package com.kylekewley.piserver;
+package com.kylekewley.piclient;
 
-import com.kylekewley.piserver.PiClient;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.HashMap;
 
@@ -14,26 +14,23 @@ public interface PiClientCallbacks {
         INVALID_HOSTNAME ("The PiClient was unable to resolve the hostname"),
         SECURITY_EXCEPTION ("The PiClient was unable to resolve the hostname because security manager is present and permission to resolve the host name is denied."),
         UNKNOWN_CONNECTION_ERROR ("An unknown error occurred while trying to connect. Please check your hostname and IP address."),
-        CONNECTION_TIMEOUT ("The connection timed out while trying to connect to the PiServer");
+        CONNECTION_TIMEOUT ("The connection timed out while trying to connect to the PiServer"),
+        CONNECTION_REFUSED ("Unable to connect. Please check that the server is running on the specified port and IP address");
 
+        @Nullable
         private String errorMessage;
 
         ClientErrorCode(String errorMessage) {
             this.errorMessage= errorMessage;
         }
 
+        @Nullable
         public String getErrorMessage() {
             return errorMessage;
         }
 
-        public void setErrorMessage(String message) {
-            if (message != null)
-                errorMessage = message;
-        }
     }
 
-
-    public HashMap<PiClientCallbacks, String> humanReadableErrors = new HashMap<PiClientCallbacks, String>();
 
     /**
      * This method is called when the client successfully connects to the PiServer host.

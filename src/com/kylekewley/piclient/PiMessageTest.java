@@ -1,17 +1,11 @@
 package com.kylekewley.piclient;
 
-import com.google.protobuf.GeneratedMessageLite;
-import com.kylekewley.piclient.protocolbuffers.ParseErrorProto;
-import org.apache.commons.net.io.SocketOutputStream;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.io.BufferedOutputStream;
 import java.io.OutputStream;
 import java.net.Socket;
-
-import static org.junit.Assert.*;
 
 public class PiMessageTest {
 

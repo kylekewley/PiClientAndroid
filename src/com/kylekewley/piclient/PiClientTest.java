@@ -3,13 +3,9 @@ package com.kylekewley.piclient;
 import com.google.protobuf.GeneratedMessageLite;
 import com.kylekewley.piclient.protocolbuffers.ParseErrorProto;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-import org.jetbrains.debugger.ExceptionCatchMode;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-
-import java.util.Stack;
 
 public class PiClientTest implements PiClientCallbacks {
     private static final String DEFAULT_HOST = "localhost";

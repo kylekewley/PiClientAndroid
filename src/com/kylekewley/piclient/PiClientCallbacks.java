@@ -2,8 +2,6 @@ package com.kylekewley.piclient;
 
 import org.jetbrains.annotations.Nullable;
 
-import java.util.HashMap;
-
 /**
  * Created by Kyle Kewley on 6/13/14.
  */

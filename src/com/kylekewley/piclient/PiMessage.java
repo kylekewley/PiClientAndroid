@@ -1,10 +1,12 @@
 package com.kylekewley.piclient;
 
 import com.google.protobuf.MessageLite;
-import com.google.protobuf.MessageLiteOrBuilder;
 import com.kylekewley.piclient.protocolbuffers.PiHeaderProto;
 
-import java.io.*;
+import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.ByteBuffer;
 
 /**
@@ -191,7 +193,7 @@ public class PiMessage {
         PiHeaderProto.PiHeader header = piHeader.build();
 
         try {
-            dataOutputStream.writeShort((short)header.getSerializedSize());
+            dataOutputStream.writeShort((short) header.getSerializedSize());
             header.writeTo(dataOutputStream);
             dataOutputStream.write(messageData);
 

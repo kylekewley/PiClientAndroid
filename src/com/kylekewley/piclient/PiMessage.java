@@ -5,7 +5,9 @@ import com.google.protobuf.MessageLiteOrBuilder;
 import com.kylekewley.piclient.protocolbuffers.PiHeaderProto;
 
 import java.io.BufferedOutputStream;
+import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 
 /**
  * Created by Kyle Kewley on 6/14/14.
@@ -36,9 +38,6 @@ public class PiMessage {
 
     ///The data that the message will send
     private byte[] messageData;
-
-    ///The number of bytes already sent using a write operation
-    private int totalBytesSent;
 
     ///The class that will handle message errors and server replies
     private PiMessageCallbacks messageCallbacks;
@@ -119,32 +118,25 @@ public class PiMessage {
 
 
     /**
-     * Write as many bytes as possible from the current position to the outputStream.
+     * Write the message to the outputStream.
      *
      * @param outputStream  The stream to write the data to.
      *
-     * @return  The number of bytes written to the stream.
      */
-    public int writeToOutputStream(BufferedOutputStream outputStream) {
-        //TODO: Implement method
-        return 0;
+    public void writeToOutputStream(OutputStream outputStream) throws IOException{
+        PiHeaderProto.PiHeader header = piHeader.build();
+
+        //Write the header prefix
+        DataOutputStream dataOutputStream = new DataOutputStream(outputStream);
+        dataOutputStream.writeShort(header.getSerializedSize());
+
+        //Write the header
+        header.writeTo(outputStream);
+
+        //Write the data
+        outputStream.write(messageData);
     }
 
-
-    /**
-     * Reset the write position. Any write call will now write data
-     * from the beginning of the PiMessage.
-     */
-    public void resetWriteLocation() {
-        totalBytesSent = 0;
-    }
-
-    /**
-     * @return  The number of bytes sent.
-     */
-    public int getTotalBytesSent() {
-        return totalBytesSent;
-    }
 
     /**
      * @return  The total number of bytes needed to write the full PiMessage.

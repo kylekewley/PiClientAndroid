@@ -1,9 +1,11 @@
 package com.kylekewley.piclient;
 
 import com.google.protobuf.MessageLite;
+import com.google.protobuf.MessageLiteOrBuilder;
 import com.kylekewley.piclient.protocolbuffers.PiHeaderProto;
 
 import java.io.BufferedOutputStream;
+import java.io.IOException;
 
 /**
  * Created by Kyle Kewley on 6/14/14.
@@ -14,7 +16,19 @@ import java.io.BufferedOutputStream;
 
 public class PiMessage {
 
-    ///Keeps track of which message IDs we have used
+    /*
+    Useful Constants
+     */
+
+    ///The size of the header length prefix in bytes.
+    static final int HEADER_PREFIX_SIZE = 2;
+
+
+    /*
+    Member Variables
+     */
+
+    ///Keeps track of which message IDs we have used.
     private static int currentMessageId = 0;
 
     ///The header for the PiMessage
@@ -31,11 +45,9 @@ public class PiMessage {
 
 
 
-
     /*
     Static Methods
      */
-
 
     /**
      * @return  A unique message ID
@@ -56,7 +68,6 @@ public class PiMessage {
      */
     private PiMessage() {}
 
-
     /**
      * Create a new PiMessage with the given parser ID and message.
      *
@@ -64,9 +75,13 @@ public class PiMessage {
      * @param message   The message that will be sent to the server.
      */
     PiMessage(int parserId, MessageLite message) {
+        piHeader = PiHeaderProto.PiHeader.newBuilder();
+        piHeader.setParserID(parserId);
+        piHeader.setMessageLength(message.getSerializedSize());
+        piHeader.setSuccessResponse(true);
 
+        messageData = message.toByteArray();
     }
-
 
     /**
      * Create a new PiMessage with the given parser ID and binary data.
@@ -75,9 +90,13 @@ public class PiMessage {
      * @param data      The data to send to the server.
      */
     PiMessage(int parserId, byte[] data) {
+        piHeader = PiHeaderProto.PiHeader.newBuilder();
+        piHeader.setParserID(parserId);
+        piHeader.setMessageLength(data.length);
+        piHeader.setSuccessResponse(true);
 
+        messageData = data;
     }
-
 
     /**
      * Create a new PiMessage with the given parser ID and no data.
@@ -87,8 +106,12 @@ public class PiMessage {
      * @param parserId  The ID set for the server side parser able to handle the data.
      */
     PiMessage(int parserId) {
-
+        piHeader = PiHeaderProto.PiHeader.newBuilder();
+        piHeader.setParserID(parserId);
+        piHeader.setMessageLength(0);
+        piHeader.setSuccessResponse(true);
     }
+
 
     /*
     Public Methods
@@ -103,7 +126,7 @@ public class PiMessage {
      * @return  The number of bytes written to the stream.
      */
     public int writeToOutputStream(BufferedOutputStream outputStream) {
-        //TODO: implement method
+        //TODO: Implement method
         return 0;
     }
 
@@ -113,7 +136,7 @@ public class PiMessage {
      * from the beginning of the PiMessage.
      */
     public void resetWriteLocation() {
-
+        totalBytesSent = 0;
     }
 
     /**
@@ -127,7 +150,7 @@ public class PiMessage {
      * @return  The total number of bytes needed to write the full PiMessage.
      */
     public int serializedSize() {
-        return 0;
+        return HEADER_PREFIX_SIZE + piHeader.build().getSerializedSize() + messageData.length;
     }
 
 
@@ -144,13 +167,6 @@ public class PiMessage {
     public PiMessageCallbacks getMessageCallbacks() {
         return messageCallbacks;
     }
-
-
-
-
-
-
-
 
 
     /*

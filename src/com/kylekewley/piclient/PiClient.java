@@ -3,10 +3,14 @@ package com.kylekewley.piclient;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.io.IOException;
+
 import java.net.ConnectException;
 import java.net.InetSocketAddress;
-import java.net.Socket;
+import java.net.StandardSocketOptions;
 import java.net.SocketTimeoutException;
+import java.nio.ByteBuffer;
+import java.nio.channels.SocketChannel;
 import java.util.ArrayList;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
@@ -37,6 +41,9 @@ public class PiClient implements PiClientCallbacks {
 
     ///The default timeout for joining a thread in milliseconds
     private static final int DEFAULT_THREAD_TIMEOUT = 1000;
+
+    ///The number of bytes to allocate for incoming messages
+    private static final int BUFFER_SIZE = 16 * 1024; //16kb
 
     /*
     Class Data Members
@@ -145,9 +152,7 @@ public class PiClient implements PiClientCallbacks {
      * @return  true if the PiClient is currently connected to the server.
      */
     public boolean isConnected() {
-        if (clientHelper == null)
-            return false;
-        return clientHelper.isConnected();
+        return clientHelper != null && clientHelper.isConnected();
     }
 
 
@@ -219,7 +224,7 @@ public class PiClient implements PiClientCallbacks {
      * by calling any of the connectToPiServer methods.
      */
     public void close() {
-        if (clientHelper != null && clientHelper.isConnected()) {
+        if (clientHelper != null && clientHelper.isConnected() && clientHelperThread != null) {
             clientHelper.close();
 
             try {
@@ -245,7 +250,8 @@ public class PiClient implements PiClientCallbacks {
      * @param message   The message to send to the server.
      */
     public void sendMessage(PiMessage message) {
-        clientHelper.sendMessage(message);
+        if (clientHelper != null && message != null)
+            clientHelper.sendMessage(message);
     }
 
 
@@ -322,7 +328,10 @@ public class PiClient implements PiClientCallbacks {
     private class PiClientHelper implements Runnable {
 
         ///The socket that will be used to connect to the PiServer.
-        private Socket socket;
+        private SocketChannel socket;
+
+        ///The buffer to use for incoming data
+        private ByteBuffer inBuffer;
 
         ///The queue of messages for the PiClient to send to the server
         @NotNull
@@ -345,6 +354,10 @@ public class PiClient implements PiClientCallbacks {
         PiClientHelper(String hostName, int port) {
             PiClient.this.port = port;
             PiClient.this.hostName = hostName;
+
+            inBuffer = ByteBuffer.allocate(BUFFER_SIZE);
+
+            //The client will connect to the server asynchronously when the run() method is called
         }
 
 
@@ -357,9 +370,12 @@ public class PiClient implements PiClientCallbacks {
             boolean connected = connectToPiServer(PiClient.this.hostName, PiClient.this.port);
 
             if (connected) {
-                //Send and receive data
-                waitForData();
+                if (waitForConnectionToFinish()) {
+                    //The connection is established
+                    waitForData();
+                }
             }
+            //If we exit run(), the thread was interrupted or the socket threw an error.
 
         }
 
@@ -393,10 +409,7 @@ public class PiClient implements PiClientCallbacks {
          * @return  true if the PiClientHelper is currently connected to a PiServer
          */
         public boolean isConnected() {
-            if (socket == null || socket.isClosed())
-                return false;
-
-            return socket.isConnected();
+            return socket != null && socket.isConnected();
         }
 
 
@@ -405,13 +418,19 @@ public class PiClient implements PiClientCallbacks {
          */
 
 
+        /**
+         * Add a message to the messageQueue.
+         * If the socket is not connected, the message will be
+         * stored and sent as soon as the connection is made.
+         *
+         * @param message   The message to send to the server.
+         */
         public void sendMessage(PiMessage message) {
-            if (clientHelperThread.isInterrupted() || !isConnected()) {
+            if (clientHelperThread.isInterrupted()) {
                 //We are closed
                 clientCallbacks.clientRaisedError(PiClient.this, ClientErrorCode.DISCONNECTED_CLIENT);
                 return;
             }
-
             messageQueue.add(message);
         }
 
@@ -456,21 +475,30 @@ public class PiClient implements PiClientCallbacks {
                 return false;
             }
 
-            //address is not null, connect a socket.
-            socket = new Socket();
-
             //Now connect it with the specified timeout
             try {
-                socket.connect(address, connectionTimeout);
+                //
+                //Configure the socket channel
+                //
+                socket = SocketChannel.open();
 
-                //We made the connection.
-                clientCallbacks.clientConnectedToHost(PiClient.this);
+                //Set non-blocking mode
+                socket.configureBlocking(false);
+
+                socket.setOption(StandardSocketOptions.SO_REUSEADDR, true);
+                //Connect
+                socket.connect(address);
+
+                //The socket isn't actually connected until socket.finishConnect() returns true
+                //But we didn't have any errors so return true
                 return true;
 
             } catch (SocketTimeoutException e) {
                 clientCallbacks.clientRaisedError(PiClient.this, ClientErrorCode.CONNECTION_TIMEOUT);
             } catch (ConnectException e) {
                 clientCallbacks.clientRaisedError(PiClient.this, ClientErrorCode.CONNECTION_REFUSED);
+            } catch (IOException e) {
+                clientCallbacks.clientRaisedError(PiClient.this, ClientErrorCode.UNKNOWN_CONNECTION_ERROR);
             } catch (Exception e) {
 
                 //Catch IOException, IllegalBlockingModeException, and IllegalArgumentException because
@@ -515,14 +543,66 @@ public class PiClient implements PiClientCallbacks {
             return null;
         }
 
+        /**
+         * This function blocks until either:
+         * - Thread.interrupted() returns true
+         * - The socket finishes establishing a connection
+         * - The socket throws an error while establishing a connection
+         *
+         * This should be called after socket.connect() has been called and socket is set to non-blocking.
+         *
+         * @return true if the socket is opened, false if there was an error waiting for the connection to establish.
+         */
+        private boolean waitForConnectionToFinish() {
+            if (socket == null || !socket.isConnectionPending()) {
+                //Socket isn't ready to connect
+                clientCallbacks.clientRaisedError(PiClient.this, ClientErrorCode.SOCKET_CONFIGURATION_ERROR);
+                return false;
+            }
+            try {
+                //Loop until connected or interrupted
+                while (!socket.finishConnect() && !Thread.interrupted());
+            } catch (Exception e) {
+                clientCallbacks.clientRaisedError(PiClient.this, ClientErrorCode.UNKNOWN_CONNECTION_ERROR);
+                return false;
+            }
+
+            return socket.isConnected();
+        }
 
         /**
          * Loop indefinitely while checking for data and sending messages to the PiServer.
          * This method should only be called after the socket is connected.
          */
         private void waitForData() {
-            while (!Thread.currentThread().isInterrupted()) {
+            while (!Thread.interrupted() && isConnected()) {
+                if (messageQueue.size() > 0) {
+                    //Send the message
+                    PiMessage message = messageQueue.peek();
 
+                    ByteBuffer byteBuffer = message.getByteBuffer();
+
+                    if (byteBuffer == null) {
+                        //Error creating the ByteBuffer
+                        clientCallbacks.clientRaisedError(PiClient.this, ClientErrorCode.UNABLE_TO_SEND_MESSAGE);
+                        //Remove the message
+                        messageQueue.remove();
+                    }else {
+                        try {
+                            //Send the message
+                            socket.write(byteBuffer);
+                            if (!byteBuffer.hasRemaining()) {
+                                //Remove it from the message queue, add to sentMessages.
+                                sentMessages.add(messageQueue.remove());
+                            }
+                        }catch (IOException e) {
+                            //Error sending the ByteBuffer
+                            clientCallbacks.clientRaisedError(PiClient.this, ClientErrorCode.UNABLE_TO_SEND_MESSAGE);
+                            //Remove the message
+                            messageQueue.remove();
+                        }
+                    }
+                }
             }
         }
 
@@ -534,7 +614,7 @@ public class PiClient implements PiClientCallbacks {
                 try {
                     socket.close();
                 }catch (Exception e) {
-                    System.out.print("Error closing socket: " + e.getMessage());
+                    System.err.print("Error closing socket: " + e.getMessage());
                 }
 
 

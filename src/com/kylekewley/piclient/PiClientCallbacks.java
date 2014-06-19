@@ -15,7 +15,9 @@ public interface PiClientCallbacks {
         SECURITY_EXCEPTION ("The PiClient was unable to resolve the hostname because security manager is present and permission to resolve the host name is denied."),
         UNKNOWN_CONNECTION_ERROR ("An unknown error occurred while trying to connect. Please check your hostname and IP address."),
         CONNECTION_TIMEOUT ("The connection timed out while trying to connect to the PiServer"),
-        CONNECTION_REFUSED ("Unable to connect. Please check that the server is running on the specified port and IP address");
+        CONNECTION_REFUSED ("Unable to connect. Please check that the server is running on the specified port and IP address"),
+        UNABLE_TO_SEND_MESSAGE ("An error occurred while trying to send the message."),
+        SOCKET_CONFIGURATION_ERROR ("The socket is not configured properly and cannot connect to the server.");
 
         @Nullable
         private String errorMessage;

@@ -4,10 +4,8 @@ import com.google.protobuf.MessageLite;
 import com.google.protobuf.MessageLiteOrBuilder;
 import com.kylekewley.piclient.protocolbuffers.PiHeaderProto;
 
-import java.io.BufferedOutputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
+import java.io.*;
+import java.nio.ByteBuffer;
 
 /**
  * Created by Kyle Kewley on 6/14/14.
@@ -42,7 +40,8 @@ public class PiMessage {
     ///The class that will handle message errors and server replies
     private PiMessageCallbacks messageCallbacks;
 
-
+    ///The ByteBuffer used to store and send data to the server
+    private ByteBuffer byteBuffer;
 
     /*
     Static Methods
@@ -78,6 +77,7 @@ public class PiMessage {
         piHeader.setParserID(parserId);
         piHeader.setMessageLength(message.getSerializedSize());
         piHeader.setSuccessResponse(true);
+        piHeader.setMessageID(getUniqueMessageId());
 
         messageData = message.toByteArray();
     }
@@ -93,6 +93,7 @@ public class PiMessage {
         piHeader.setParserID(parserId);
         piHeader.setMessageLength(data.length);
         piHeader.setSuccessResponse(true);
+        piHeader.setMessageID(getUniqueMessageId());
 
         messageData = data;
     }
@@ -109,6 +110,8 @@ public class PiMessage {
         piHeader.setParserID(parserId);
         piHeader.setMessageLength(0);
         piHeader.setSuccessResponse(true);
+        piHeader.setMessageID(getUniqueMessageId());
+
     }
 
 
@@ -123,7 +126,7 @@ public class PiMessage {
      * @param outputStream  The stream to write the data to.
      *
      */
-    public void writeToOutputStream(OutputStream outputStream) throws IOException{
+    public void writeToOutputStream(OutputStream outputStream) throws IOException {
         PiHeaderProto.PiHeader header = piHeader.build();
 
         //Write the header prefix
@@ -137,6 +140,19 @@ public class PiMessage {
         outputStream.write(messageData);
     }
 
+    /**
+     * This will return the same ByteBuffer through multiple calls.
+     * This means that resetByteBuffer() must be called after any changes
+     * are made to the PiMessage, or if the ByteBuffer needs to point to the beginning
+     * of the data again.
+     *
+     * @return A ByteBuffer object with the message data or null if there was an error while creating the ByteBuffer
+     */
+    public ByteBuffer getByteBuffer() {
+        if (byteBuffer == null)
+            byteBuffer = getByteBufferHelper();
+        return byteBuffer;
+    }
 
     /**
      * @return  The total number of bytes needed to write the full PiMessage.
@@ -164,4 +180,32 @@ public class PiMessage {
     /*
     Private Methods
      */
+
+    /**
+     * @return A new ByteBuffer with the message data or null if there was an error creating the byte buffer.
+     */
+    private ByteBuffer getByteBufferHelper() {
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream(serializedSize());
+        DataOutputStream dataOutputStream = new DataOutputStream(outputStream);
+
+        PiHeaderProto.PiHeader header = piHeader.build();
+
+        try {
+            dataOutputStream.writeShort((short)header.getSerializedSize());
+            header.writeTo(dataOutputStream);
+            dataOutputStream.write(messageData);
+
+
+
+            //Get the ByteBuffer from the outputStream
+            ByteBuffer byteBuffer = ByteBuffer.wrap(outputStream.toByteArray());
+
+            dataOutputStream.close();
+            outputStream.close();
+
+            return byteBuffer;
+        }catch (IOException e) {
+            return null;
+        }
+    }
 }

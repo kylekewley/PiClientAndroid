@@ -1,7 +1,10 @@
 package com.kylekewley.piclient;
 
+import com.google.protobuf.GeneratedMessageLite;
+import com.kylekewley.piclient.protocolbuffers.ParseErrorProto;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.jetbrains.debugger.ExceptionCatchMode;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -12,40 +15,54 @@ public class PiClientTest implements PiClientCallbacks {
     private static final String DEFAULT_HOST = "localhost";
     private static final int DEFAULT_PORT = 10002;
 
+    private long sendStartTime;
+
     private PiClient piClient;
 
 
 
     @Before
     public void setUp() throws Exception {
-        piClient = new PiClient(this);
+        piClient = new PiClient("localhost", 10002, this);
     }
 
     @After
     public void tearDown() throws Exception {
+        piClient.close();
     }
 
     @Test
-    public void testConnectToPiServer() throws Exception {
-        System.out.println("Testing connection");
-        piClient.connectToPiServer(DEFAULT_HOST, DEFAULT_PORT);
+    public void testMessage() throws Exception {
+        byte[] data = new byte[1024 * 512];
+        PiMessage message = new PiMessage(0, data);
+        message.setMessageCallbacks(new PiMessageCallbacks() {
+            @Override
+            public void serverReturnedData(byte[] data, PiMessage message) {
+
+            }
+
+            @Override
+            public void serverRepliedWithMessage(GeneratedMessageLite response, PiMessage sentMessage) {
+
+            }
+
+            @Override
+            public void serverSuccessfullyParsedMessage(PiMessage message) {
+
+            }
+
+            @Override
+            public void serverReturnedErrorForMessage(ParseErrorProto.ParseError parseError, PiMessage message) {
+                System.out.println("Server had trouble parsing message");
+            }
+        });
+
+        sendStartTime = System.currentTimeMillis();
+        piClient.sendMessage(message);
+        Thread.sleep(5000);
     }
 
-    @Test
-    public void testReconnectToPiServer() throws Exception {
-        piClient.reconnectToPiServer();
 
-    }
-
-    @Test
-    public void testClose() throws Exception {
-
-    }
-
-    @Test
-    public void testSendMessage() throws Exception {
-
-    }
 
 
     /*

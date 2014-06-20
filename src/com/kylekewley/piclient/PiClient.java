@@ -71,6 +71,8 @@ public class PiClient implements PiClientCallbacks {
     ///The port number to connect to on the remote host.
     private int port;
 
+    ///The PiServerManager for this client instance
+    private PiServerManager serverManager = new PiServerManager();
 
     /*
     Class Constructors
@@ -602,14 +604,26 @@ public class PiClient implements PiClientCallbacks {
                         }
                     }
                 }
+
+                try {
+                    if (socket.read(inBuffer) > 0) {
+                        inBuffer.flip();
+                        boolean status = serverManager.serverSentMessage(inBuffer, sentMessages);
+                        inBuffer.clear();
+
+                        if (status == false) {
+                            clientCallbacks.clientRaisedError(PiClient.this, ClientErrorCode.UNABLE_TO_READ_MESSAGE);
+                        }
+                    }
+                } catch (IOException e) {
+                    System.err.println("Error reading data...");
+                }
             }
         }
 
 
         private void close() {
             if (isConnected() && socket != null) {
-                clientHelperThread.interrupt();
-
                 try {
                     socket.close();
                 }catch (Exception e) {

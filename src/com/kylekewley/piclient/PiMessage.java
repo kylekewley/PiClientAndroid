@@ -156,6 +156,15 @@ public class PiMessage {
         return byteBuffer;
     }
 
+
+    /**
+     * @return  The message ID.
+     */
+    public int getMessageId() {
+        return piHeader.getMessageID();
+    }
+
+
     /**
      * @return  The total number of bytes needed to write the full PiMessage.
      */

@@ -2,6 +2,9 @@ package com.kylekewley.piclient;
 
 import com.google.protobuf.GeneratedMessageLite;
 import com.kylekewley.piclient.protocolbuffers.ParseErrorProto;
+import com.kylekewley.piclient.protocolbuffers.PingProto;
+import io.netty.util.internal.StringUtil;
+import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.junit.After;
 import org.junit.Before;
@@ -15,11 +18,13 @@ public class PiClientTest implements PiClientCallbacks {
 
     private PiClient piClient;
 
+    private Thread mainThread;
 
 
     @Before
     public void setUp() throws Exception {
         piClient = new PiClient("localhost", 10002, this);
+        mainThread = Thread.currentThread();
     }
 
     @After
@@ -29,8 +34,11 @@ public class PiClientTest implements PiClientCallbacks {
 
     @Test
     public void testMessage() throws Exception {
-        byte[] data = new byte[1024 * 512];
-        PiMessage message = new PiMessage(0, data);
+
+        String string = new String("h");
+        String repeat = StringUtils.repeat(string,  8 * 1024 * 1024);
+        PingProto.Ping ping = PingProto.Ping.newBuilder().setMessage(repeat).build();
+        PiMessage message = new PiMessage(1, ping);
         message.setMessageCallbacks(new PiMessageCallbacks() {
             @Override
             public void serverReturnedData(byte[] data, PiMessage message) {
@@ -44,7 +52,10 @@ public class PiClientTest implements PiClientCallbacks {
 
             @Override
             public void serverSuccessfullyParsedMessage(PiMessage message) {
-
+                long sendEndTime = System.currentTimeMillis();
+                System.out.println("Server parsed message in " + (sendEndTime - sendStartTime) + " milliseconds.");
+                piClient.close();
+                mainThread.interrupt();
             }
 
             @Override
@@ -55,7 +66,7 @@ public class PiClientTest implements PiClientCallbacks {
 
         sendStartTime = System.currentTimeMillis();
         piClient.sendMessage(message);
-        Thread.sleep(5000);
+        while (!Thread.interrupted());
     }
 
 

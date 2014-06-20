@@ -15,7 +15,8 @@ public interface PiClientCallbacks {
         CONNECTION_TIMEOUT ("The connection timed out while trying to connect to the PiServer"),
         CONNECTION_REFUSED ("Unable to connect. Please check that the server is running on the specified port and IP address"),
         UNABLE_TO_SEND_MESSAGE ("An error occurred while trying to send the message."),
-        SOCKET_CONFIGURATION_ERROR ("The socket is not configured properly and cannot connect to the server.");
+        SOCKET_CONFIGURATION_ERROR ("The socket is not configured properly and cannot connect to the server."),
+        UNABLE_TO_READ_MESSAGE ("Unable to read the message from the server.");
 
         @Nullable
         private String errorMessage;

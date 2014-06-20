@@ -1,12 +1,14 @@
 package com.kylekewley.piclient;
 
 import com.google.protobuf.InvalidProtocolBufferException;
+import com.kylekewley.piclient.protocolbuffers.ParseErrorProto;
 import com.kylekewley.piclient.protocolbuffers.PiHeaderProto;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.InputStream;
+import java.net.ProtocolException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 
@@ -145,8 +147,40 @@ public class PiServerManager {
                 }
 
                 if (previousMessage != null) {
-                    previousMessage.getMessageCallbacks().serverSuccessfullyParsedMessage(previousMessage);
+                    com.google.protobuf.GeneratedMessageLite.Builder builder = previousMessage.getMessageCallbacks().getBuilder();
+
+                    if (piHeader.getMessageLength() == 0) {
+                        //Just a header reply
+                        previousMessage.getMessageCallbacks().serverSuccessfullyParsedMessage(previousMessage);
+                    }else {
+                        //There is data with it
+                        if ((piHeader.getFlags() & PiMessage.HEADER_FLAG_ERROR) != 0) {
+                            try {
+                                ParseErrorProto.ParseError error = ParseErrorProto.ParseError.newBuilder().mergeFrom(messageData).build();
+                                previousMessage.getMessageCallbacks().serverReturnedErrorForMessage(error, previousMessage);
+                            } catch (InvalidProtocolBufferException e) {
+                                //Parser didn't work, just reply with the data
+                                previousMessage.getMessageCallbacks().serverReturnedData(messageData, previousMessage);
+                            }
+                        } else if (builder != null) {
+                            try {
+                                builder.clear();
+                                builder.mergeFrom(messageData);
+
+                                previousMessage.getMessageCallbacks().serverRepliedWithMessage(builder.build(), previousMessage);
+                            } catch (InvalidProtocolBufferException e) {
+                                //Parser didn't work, just reply with the data
+                                previousMessage.getMessageCallbacks().serverReturnedData(messageData, previousMessage);
+                            }
+                        }else {
+                            //Just reply with the data
+                            previousMessage.getMessageCallbacks().serverReturnedData(messageData, previousMessage);
+                        }
+                    }
                 }
+
+                headerLengthBuffer = ByteBuffer.allocate(PiMessage.HEADER_PREFIX_SIZE);
+                messageData = null;
             }
         }
 

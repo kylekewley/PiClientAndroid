@@ -1,6 +1,7 @@
 package com.kylekewley.piclient;
 
 import com.google.protobuf.GeneratedMessageLite;
+import com.google.protobuf.MessageLite;
 import com.kylekewley.piclient.protocolbuffers.ParseErrorProto;
 import com.kylekewley.piclient.protocolbuffers.PingProto;
 import io.netty.util.internal.StringUtil;
@@ -35,27 +36,51 @@ public class PiClientTest implements PiClientCallbacks {
     @Test
     public void testMessage() throws Exception {
 
-        String string = new String("h");
-        String repeat = StringUtils.repeat(string,  8 * 1024 * 1024);
+        String repeat = StringUtils.repeat("Hello World!",  1);
         PingProto.Ping ping = PingProto.Ping.newBuilder().setMessage(repeat).build();
-        PiMessage message = new PiMessage(1, ping);
-        message.setMessageCallbacks(new PiMessageCallbacks() {
+        PiMessage message1 = new PiMessage(1, ping);
+        message1.setMessageCallbacks(new PiMessageCallbacks() {
             @Override
             public void serverReturnedData(byte[] data, PiMessage message) {
 
             }
 
             @Override
-            public void serverRepliedWithMessage(GeneratedMessageLite response, PiMessage sentMessage) {
+            public void serverRepliedWithMessage(MessageLite response, PiMessage sentMessage) {
+                System.out.println("Parsed message 1");
+            }
+
+            @Override
+            public void serverSuccessfullyParsedMessage(PiMessage message) {
+
+            }
+
+            @Override
+            public void serverReturnedErrorForMessage(ParseErrorProto.ParseError parseError, PiMessage message) {
+
+            }
+        });
+        PiMessage message2 = new PiMessage(1, ping);
+        message2.setMessageCallbacks(new PiMessageCallbacks(PingProto.Ping.newBuilder()) {
+            @Override
+            public void serverReturnedData(byte[] data, PiMessage message) {
+
+            }
+
+            @Override
+            public void serverRepliedWithMessage(MessageLite response, PiMessage sentMessage) {
+                PingProto.Ping ping = (PingProto.Ping)response;
+                System.out.println(ping.getMessage());
+
+                mainThread.interrupt();
+                long sendEndTime = System.currentTimeMillis();
+                System.out.println("Server parsed message in " + (sendEndTime - sendStartTime) + " milliseconds.");
+                piClient.close();
 
             }
 
             @Override
             public void serverSuccessfullyParsedMessage(PiMessage message) {
-                long sendEndTime = System.currentTimeMillis();
-                System.out.println("Server parsed message in " + (sendEndTime - sendStartTime) + " milliseconds.");
-                piClient.close();
-                mainThread.interrupt();
             }
 
             @Override
@@ -65,7 +90,8 @@ public class PiClientTest implements PiClientCallbacks {
         });
 
         sendStartTime = System.currentTimeMillis();
-        piClient.sendMessage(message);
+        piClient.sendMessage(message1);
+        piClient.sendMessage(message2);
         while (!Thread.interrupted());
     }
 

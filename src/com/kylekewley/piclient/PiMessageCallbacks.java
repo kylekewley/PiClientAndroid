@@ -1,5 +1,6 @@
 package com.kylekewley.piclient;
 
+import com.google.protobuf.MessageLite;
 import com.kylekewley.piclient.protocolbuffers.ParseErrorProto;
 
 /**
@@ -36,6 +37,20 @@ public abstract class PiMessageCallbacks {
 
 
     /**
+     * @param builder   The builder used to parse the server reply.
+     */
+    public void setBuilder(com.google.protobuf.GeneratedMessageLite.Builder builder) {
+        this.builder = builder;
+    }
+
+    /**
+     * @return  The builder used to parse the server reply, or null.
+     */
+    public com.google.protobuf.GeneratedMessageLite.Builder getBuilder() {
+        return builder;
+    }
+
+    /**
      * Called if this.builder is null and the server sends a reply message.
      *
      * @param data      The binary data from the server.
@@ -50,7 +65,7 @@ public abstract class PiMessageCallbacks {
      * @param response      The message that the server replied with.
      * @param sentMessage   The PiMessage object that is being replied to.
      */
-    public abstract void serverRepliedWithMessage(com.google.protobuf.GeneratedMessageLite response, PiMessage sentMessage);
+    public abstract void serverRepliedWithMessage(MessageLite response, PiMessage sentMessage);
 
 
     /**

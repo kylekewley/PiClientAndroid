@@ -25,7 +25,7 @@ public class PiMessage {
     ///The size of the header length prefix in bytes.
     static final int HEADER_PREFIX_SIZE = 2;
 
-
+    static final long HEADER_FLAG_ERROR = 1L << 0;
     /*
     Member Variables
      */

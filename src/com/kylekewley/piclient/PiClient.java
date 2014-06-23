@@ -634,8 +634,7 @@ public class PiClient implements PiClientCallbacks {
                 messageQueue.clear();
                 sentMessages.clear();
 
-                //TODO: Reset the ServerManager once we create the class.
-
+                serverManager = new PiServerManager();
                 //The main thread should now be able to call join()
             }
         }

@@ -56,6 +56,7 @@ public class PiServerManager {
     private int currentMessageLength;
 
 
+
     /**
      * Called when the the socket has data to read.
      *
@@ -137,7 +138,6 @@ public class PiServerManager {
             if (currentMessageLength == piHeader.getMessageLength()) {
                 //Got the full message
                 messageStatus = MessageStatus.MESSAGE_STATUS_NONE;
-                //TODO: Do something with the message
 
                 PiMessage previousMessage = null;
                 for (PiMessage piMessage : sentMessages) {
@@ -147,36 +147,9 @@ public class PiServerManager {
                 }
 
                 if (previousMessage != null) {
-                    com.google.protobuf.GeneratedMessageLite.Builder builder = previousMessage.getMessageCallbacks().getBuilder();
 
-                    if (piHeader.getMessageLength() == 0) {
-                        //Just a header reply
-                        previousMessage.getMessageCallbacks().serverSuccessfullyParsedMessage(previousMessage);
-                    }else {
-                        //There is data with it
-                        if ((piHeader.getFlags() & PiMessage.HEADER_FLAG_ERROR) != 0) {
-                            try {
-                                ParseErrorProto.ParseError error = ParseErrorProto.ParseError.newBuilder().mergeFrom(messageData).build();
-                                previousMessage.getMessageCallbacks().serverReturnedErrorForMessage(error, previousMessage);
-                            } catch (InvalidProtocolBufferException e) {
-                                //Parser didn't work, just reply with the data
-                                previousMessage.getMessageCallbacks().serverReturnedData(messageData, previousMessage);
-                            }
-                        } else if (builder != null) {
-                            try {
-                                builder.clear();
-                                builder.mergeFrom(messageData);
+                }else {
 
-                                previousMessage.getMessageCallbacks().serverRepliedWithMessage(builder.build(), previousMessage);
-                            } catch (InvalidProtocolBufferException e) {
-                                //Parser didn't work, just reply with the data
-                                previousMessage.getMessageCallbacks().serverReturnedData(messageData, previousMessage);
-                            }
-                        }else {
-                            //Just reply with the data
-                            previousMessage.getMessageCallbacks().serverReturnedData(messageData, previousMessage);
-                        }
-                    }
                 }
 
                 headerLengthBuffer = ByteBuffer.allocate(PiMessage.HEADER_PREFIX_SIZE);

@@ -71,8 +71,11 @@ public class PiClient implements PiClientCallbacks {
     ///The port number to connect to on the remote host.
     private int port;
 
+    ///The PiParser for the client instance.
+    private PiParser piParser = new PiParser();
+
     ///The PiServerManager for this client instance
-    private PiServerManager serverManager = new PiServerManager();
+    private PiServerManager serverManager = new PiServerManager(piParser);
 
     /*
     Class Constructors
@@ -634,7 +637,7 @@ public class PiClient implements PiClientCallbacks {
                 messageQueue.clear();
                 sentMessages.clear();
 
-                serverManager = new PiServerManager();
+                serverManager = new PiServerManager(piParser);
                 //The main thread should now be able to call join()
             }
         }

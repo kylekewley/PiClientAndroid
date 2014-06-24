@@ -55,6 +55,18 @@ public class PiServerManager {
     ///The number of bytes stored for the actual message
     private int currentMessageLength;
 
+    ///The PiParser that will handle complete messages
+    private PiParser piParser;
+
+
+    /**
+     * Initialize the PiServerManager with a PiParser.
+     */
+    public PiServerManager(PiParser piParser) {
+        this.piParser = piParser;
+    }
+
+    private PiServerManager() {}
 
 
     /**
@@ -147,9 +159,9 @@ public class PiServerManager {
                 }
 
                 if (previousMessage != null) {
-
+                    piParser.parseData(messageData, piHeader);
                 }else {
-
+                    piParser.parseData(messageData, piHeader, previousMessage);
                 }
 
                 headerLengthBuffer = ByteBuffer.allocate(PiMessage.HEADER_PREFIX_SIZE);

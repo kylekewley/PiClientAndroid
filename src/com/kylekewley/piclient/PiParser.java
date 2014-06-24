@@ -4,10 +4,16 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import com.kylekewley.piclient.protocolbuffers.ParseErrorProto;
 import com.kylekewley.piclient.protocolbuffers.PiHeaderProto;
 
+import java.util.TreeSet;
+
 /**
  * Created by Kyle Kewley on 6/23/14.
  */
 public class PiParser {
+
+    ///Set of all registered parsers
+    private TreeSet<CustomParserWrapper> parsers = new TreeSet<CustomParserWrapper>();
+
 
     /**
      * Parse a full message with the given piHeader that is not replying to any sent message.
@@ -16,7 +22,17 @@ public class PiParser {
      * @param piHeader      The piHeader from the data.
      */
     public void parseData(byte[] messageData, PiHeaderProto.PiHeader piHeader) {
+        CustomParserWrapper tmpWrapper = new CustomParserWrapper(piHeader.getParserID());
 
+        CustomParserWrapper parserWrapper = findParserWrapper(tmpWrapper);
+
+        if (parserWrapper != null) {
+            try {
+                parserWrapper.getParser().parse(messageData);
+            }catch (Exception e) {
+                System.err.println(e.getMessage());
+            }
+        }
     }
 
     /**
@@ -58,6 +74,43 @@ public class PiParser {
             }
         }
 
+    }
+
+
+    /**
+     *Register a custom parser for a given parserID range.
+     *All incoming messages with a PiHeader.parserID in the given range
+     *will be passed along to the given custom parser to parse.
+     *No intersecting ranges are allowed.
+     *
+     * @param customParser  The parser that will be registered.
+     *
+     *@return   true if the range is unique, false otherwise
+     */
+    public boolean registerParserForId(CustomParserWrapper customParser) {
+        if (customParser.getParser() == null)
+            return false;
+
+        return parsers.add(customParser);
+    }
+
+
+    /**
+     * Iterates through the parsers set looking for a parser that is equal to parserWrapper.
+     *
+     * @param parserWrapper     The CustomParserWrapper to search for.
+     * @return  The equal CustomParserWrapper from the parsers set, or null if not found.
+     */
+    private CustomParserWrapper findParserWrapper(CustomParserWrapper parserWrapper) {
+        if (parsers == null)
+            return null;
+
+        for (CustomParserWrapper compareWrapper : parsers) {
+            if (compareWrapper.equals(parserWrapper))
+                return compareWrapper;
+        }
+
+        return null;
     }
 
 }

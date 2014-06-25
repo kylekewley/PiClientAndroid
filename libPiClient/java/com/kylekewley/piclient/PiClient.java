@@ -86,7 +86,7 @@ public class PiClient implements PiClientCallbacks {
      * Creates an unconnected PiClient. The socket must be connected later.
      * using the connectToServer() method.
      */
-    PiClient() {
+    public PiClient() {
 
     }
 
@@ -95,7 +95,7 @@ public class PiClient implements PiClientCallbacks {
      *
      * @param clientCallbacks   The object that will handle error messages and status updates.
      */
-    PiClient(PiClientCallbacks clientCallbacks) {
+    public PiClient(PiClientCallbacks clientCallbacks) {
         this.clientCallbacks = clientCallbacks;
     }
 
@@ -107,7 +107,7 @@ public class PiClient implements PiClientCallbacks {
      * @param port              The port number.
      * @param clientCallbacks   The object that will handle error messages and status updates.
      */
-    PiClient(String hostName, int port, PiClientCallbacks clientCallbacks) {
+    public PiClient(String hostName, int port, PiClientCallbacks clientCallbacks) {
         this.hostName = hostName;
         this.port = port;
         this.clientCallbacks = clientCallbacks;

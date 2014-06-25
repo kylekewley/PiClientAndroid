@@ -1,5 +1,4 @@
-package com.kylekewley.piclient;
-
+import com.kylekewley.piclient.PiMessage;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;

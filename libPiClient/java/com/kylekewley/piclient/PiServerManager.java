@@ -4,11 +4,6 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import com.kylekewley.piclient.protocolbuffers.ParseErrorProto;
 import com.kylekewley.piclient.protocolbuffers.PiHeaderProto;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.DataInputStream;
-import java.io.InputStream;
-import java.net.ProtocolException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 

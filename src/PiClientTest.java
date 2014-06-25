@@ -1,10 +1,10 @@
-package com.kylekewley.piclient;
-
-import com.google.protobuf.GeneratedMessageLite;
 import com.google.protobuf.MessageLite;
+import com.kylekewley.piclient.PiClient;
+import com.kylekewley.piclient.PiClientCallbacks;
+import com.kylekewley.piclient.PiMessage;
+import com.kylekewley.piclient.PiMessageCallbacks;
 import com.kylekewley.piclient.protocolbuffers.ParseErrorProto;
 import com.kylekewley.piclient.protocolbuffers.PingProto;
-import io.netty.util.internal.StringUtil;
 import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.junit.After;
@@ -18,7 +18,6 @@ public class PiClientTest implements PiClientCallbacks {
     private long sendStartTime;
 
     private PiClient piClient;
-
     private Thread mainThread;
 
 
@@ -26,6 +25,7 @@ public class PiClientTest implements PiClientCallbacks {
     public void setUp() throws Exception {
         piClient = new PiClient("localhost", 10002, this);
         mainThread = Thread.currentThread();
+
     }
 
     @After

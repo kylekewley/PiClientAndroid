@@ -74,7 +74,7 @@ public class PiMessage {
      * @param parserId  The ID set for the server side parser able to handle the message.
      * @param message   The message that will be sent to the server.
      */
-    PiMessage(int parserId, MessageLite message) {
+    public PiMessage(int parserId, MessageLite message) {
         piHeader = PiHeaderProto.PiHeader.newBuilder();
         piHeader.setParserID(parserId);
         piHeader.setMessageLength(message.getSerializedSize());
@@ -90,7 +90,7 @@ public class PiMessage {
      * @param parserId  The ID set for the server side parser able to handle the data.
      * @param data      The data to send to the server.
      */
-    PiMessage(int parserId, byte[] data) {
+    public PiMessage(int parserId, byte[] data) {
         piHeader = PiHeaderProto.PiHeader.newBuilder();
         piHeader.setParserID(parserId);
         piHeader.setMessageLength(data.length);
@@ -107,7 +107,7 @@ public class PiMessage {
      *
      * @param parserId  The ID set for the server side parser able to handle the data.
      */
-    PiMessage(int parserId) {
+    public PiMessage(int parserId) {
         piHeader = PiHeaderProto.PiHeader.newBuilder();
         piHeader.setParserID(parserId);
         piHeader.setMessageLength(0);

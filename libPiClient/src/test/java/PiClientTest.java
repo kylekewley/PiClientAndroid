@@ -1,3 +1,5 @@
+package com.kylekewley.piclient;
+
 import com.google.protobuf.MessageLite;
 import com.kylekewley.piclient.PiClient;
 import com.kylekewley.piclient.PiClientCallbacks;

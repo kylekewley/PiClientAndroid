@@ -1,7 +1,6 @@
 package com.kylekewley.piclient;
 
 import com.google.protobuf.InvalidProtocolBufferException;
-import com.kylekewley.piclient.protocolbuffers.ParseErrorProto;
 import com.kylekewley.piclient.protocolbuffers.PiHeaderProto;
 
 import java.nio.ByteBuffer;

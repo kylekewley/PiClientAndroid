@@ -1,5 +1,3 @@
-package com.kylekewley.piclient;
-
 import com.google.protobuf.MessageLite;
 import com.kylekewley.piclient.PiClient;
 import com.kylekewley.piclient.PiClientCallbacks;
@@ -8,7 +6,6 @@ import com.kylekewley.piclient.PiMessageCallbacks;
 import com.kylekewley.piclient.protocolbuffers.ParseErrorProto;
 import com.kylekewley.piclient.protocolbuffers.PingProto;
 import org.apache.commons.lang.StringUtils;
-import org.jetbrains.annotations.NotNull;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -127,7 +124,7 @@ public class PiClientTest implements PiClientCallbacks {
     }
 
     @Override
-    public void clientRaisedError(PiClient piClient, @NotNull ClientErrorCode error) {
+    public void clientRaisedError(PiClient piClient, ClientErrorCode error) {
         System.out.println(error.getErrorMessage());
     }
 

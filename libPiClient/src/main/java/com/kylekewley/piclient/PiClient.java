@@ -1,8 +1,5 @@
 package com.kylekewley.piclient;
 
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-
 import java.io.IOException;
 import java.net.ConnectException;
 import java.net.InetSocketAddress;
@@ -57,11 +54,9 @@ public class PiClient implements PiClientCallbacks {
 
 
     ///The PiClientHelper running on a secondary thread.
-    @Nullable
     private PiClientHelper clientHelper;
 
     ///The Thread object that is running the PiClientHelper.
-    @Nullable
     private Thread clientHelperThread;
 
 
@@ -190,7 +185,7 @@ public class PiClient implements PiClientCallbacks {
      * @param hostName  The IP address.
      * @param port      The port number.
      */
-    public void connectToPiServer(@Nullable String hostName, int port) {
+    public void connectToPiServer(String hostName, int port) {
 
         //Make sure the port is valid
         if (port <= 0 || port > MAX_PORT) {
@@ -316,12 +311,12 @@ public class PiClient implements PiClientCallbacks {
     }
 
     @Override
-    public void clientRaisedError(PiClient piClient, @NotNull ClientErrorCode error) {
+    public void clientRaisedError(PiClient piClient, ClientErrorCode error) {
         System.out.println(error.getErrorMessage());
     }
 
     @Override
-    public void clientRaisedError(PiClient piClient, @NotNull Exception error) {
+    public void clientRaisedError(PiClient piClient, Exception error) {
         System.out.print(error.getMessage());
     }
 
@@ -338,11 +333,9 @@ public class PiClient implements PiClientCallbacks {
         private ByteBuffer inBuffer;
 
         ///The queue of messages for the PiClient to send to the server
-        @NotNull
         private ConcurrentLinkedQueue<PiMessage> messageQueue = new ConcurrentLinkedQueue<PiMessage>();
 
         ///The list that holds sent messages waiting for a reply
-        @NotNull
         private ArrayList<PiMessage> sentMessages = new ArrayList<PiMessage>();
 
         /*

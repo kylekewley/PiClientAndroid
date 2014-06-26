@@ -1,7 +1,5 @@
 package com.kylekewley.piclient;
 
-import org.jetbrains.annotations.Nullable;
-
 /**
  * Created by Kyle Kewley on 6/13/14.
  */
@@ -18,14 +16,12 @@ public interface PiClientCallbacks {
         SOCKET_CONFIGURATION_ERROR ("The socket is not configured properly and cannot connect to the server."),
         UNABLE_TO_READ_MESSAGE ("Unable to read the message from the server.");
 
-        @Nullable
         private String errorMessage;
 
         ClientErrorCode(String errorMessage) {
             this.errorMessage= errorMessage;
         }
 
-        @Nullable
         public String getErrorMessage() {
             return errorMessage;
         }

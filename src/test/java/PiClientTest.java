@@ -1,11 +1,8 @@
 import com.google.protobuf.MessageLite;
-import com.kylekewley.piclient.PiClient;
+import com.kylekewley.piclient.*;
 import com.kylekewley.piclient.PiClientCallbacks;
-import com.kylekewley.piclient.PiMessage;
-import com.kylekewley.piclient.PiMessageCallbacks;
 import com.kylekewley.piclient.protocolbuffers.ParseErrorProto;
 import com.kylekewley.piclient.protocolbuffers.PingProto;
-import org.apache.commons.lang.StringUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -35,8 +32,7 @@ public class PiClientTest implements PiClientCallbacks {
     @Test
     public void testMessage() throws Exception {
 
-        String repeat = StringUtils.repeat("Hello World!",  1);
-        PingProto.Ping ping = PingProto.Ping.newBuilder().setMessage(repeat).build();
+        PingProto.Ping ping = PingProto.Ping.newBuilder().setMessage("Hello World!").build();
         PiMessage message1 = new PiMessage(1, ping);
         message1.setMessageCallbacks(new PiMessageCallbacks() {
             @Override
@@ -121,17 +117,20 @@ public class PiClientTest implements PiClientCallbacks {
     @Override
     public void clientConnectionTimedOut(PiClient piClient) {
         System.out.println("Connection to host timed out. Try to reconnect.");
+        mainThread.interrupt();
     }
 
     @Override
     public void clientRaisedError(PiClient piClient, ClientErrorCode error) {
         System.out.println(error.getErrorMessage());
+        mainThread.interrupt();
     }
 
     @Override
     public void clientRaisedError(PiClient piClient, Exception error) {
         System.out.print("Failed with exception: " + error.getClass().toString() + " : ");
         System.out.println(error.getMessage());
+        mainThread.interrupt();
     }
 
 }

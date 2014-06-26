@@ -1,11 +1,11 @@
 package com.kylekewley.piclient;
 
 import com.google.protobuf.InvalidProtocolBufferException;
+import com.kylekewley.piclient.CustomParserWrapper;
 import com.kylekewley.piclient.protocolbuffers.ParseErrorProto;
 import com.kylekewley.piclient.protocolbuffers.PiHeaderProto;
 
 import java.util.TreeSet;
-
 /**
  * Created by Kyle Kewley on 6/23/14.
  */

@@ -1,10 +1,11 @@
 package com.kylekewley.piclient;
 
-import com.google.protobuf.InvalidProtocolBufferException;
-import com.kylekewley.piclient.CustomParserWrapper;
-import com.kylekewley.piclient.protocolbuffers.ParseErrorProto;
-import com.kylekewley.piclient.protocolbuffers.PiHeaderProto;
 
+import com.kylekewley.piclient.protocolbuffers.ParseError;
+import com.kylekewley.piclient.protocolbuffers.PiHeader;
+import com.squareup.wire.Message;
+
+import java.io.IOException;
 import java.util.TreeSet;
 /**
  * Created by Kyle Kewley on 6/23/14.
@@ -21,8 +22,8 @@ public class PiParser {
      * @param messageData   The messageData to parse.
      * @param piHeader      The piHeader from the data.
      */
-    public void parseData(byte[] messageData, PiHeaderProto.PiHeader piHeader) {
-        CustomParserWrapper tmpWrapper = new CustomParserWrapper(piHeader.getParserID());
+    public void parseData(byte[] messageData, PiHeader piHeader) {
+        CustomParserWrapper tmpWrapper = new CustomParserWrapper(piHeader.parserID);
 
         CustomParserWrapper parserWrapper = findParserWrapper(tmpWrapper);
 
@@ -42,29 +43,28 @@ public class PiParser {
      * @param piHeader          The piHeader from the data.
      * @param previousMessage   The message the data is replying to.
      */
-    public void parseData(byte[] messageData, PiHeaderProto.PiHeader piHeader, PiMessage previousMessage) {
-        com.google.protobuf.GeneratedMessageLite.Builder builder = previousMessage.getMessageCallbacks().getBuilder();
+    public void parseData(byte[] messageData, PiHeader piHeader, PiMessage previousMessage) {
+        Class<? extends Message> messageClass = previousMessage.getMessageCallbacks().getMessageClass();
 
-        if (piHeader.getMessageLength() == 0) {
+        if (piHeader.messageLength == 0) {
             //Just a header reply
             previousMessage.getMessageCallbacks().serverSuccessfullyParsedMessage(previousMessage);
         }else {
             //There is data with it
-            if ((piHeader.getFlags() & PiMessage.HEADER_FLAG_ERROR) != 0) {
+            if (piHeader.flags != null && (piHeader.flags & PiMessage.HEADER_FLAG_ERROR) != 0) {
                 try {
-                    ParseErrorProto.ParseError error = ParseErrorProto.ParseError.newBuilder().mergeFrom(messageData).build();
+                    ParseError error = MessageWire.getInstance().parseFrom(messageData, ParseError.class);
                     previousMessage.getMessageCallbacks().serverReturnedErrorForMessage(error, previousMessage);
-                } catch (InvalidProtocolBufferException e) {
+                } catch (IOException e) {
                     //Parser didn't work, just reply with the data
                     previousMessage.getMessageCallbacks().serverReturnedData(messageData, previousMessage);
                 }
-            } else if (builder != null) {
+            } else if (messageClass != null) {
                 try {
-                    builder.clear();
-                    builder.mergeFrom(messageData);
+                    Message m = MessageWire.getInstance().parseFrom(messageData, messageClass);
 
-                    previousMessage.getMessageCallbacks().serverRepliedWithMessage(builder.build(), previousMessage);
-                } catch (InvalidProtocolBufferException e) {
+                    previousMessage.getMessageCallbacks().serverRepliedWithMessage(m, previousMessage);
+                } catch (IOException e) {
                     //Parser didn't work, just reply with the data
                     previousMessage.getMessageCallbacks().serverReturnedData(messageData, previousMessage);
                 }

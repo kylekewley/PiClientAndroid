@@ -1,8 +1,9 @@
-import com.google.protobuf.MessageLite;
 import com.kylekewley.piclient.*;
 import com.kylekewley.piclient.PiClientCallbacks;
-import com.kylekewley.piclient.protocolbuffers.ParseErrorProto;
-import com.kylekewley.piclient.protocolbuffers.PingProto;
+
+import com.kylekewley.piclient.protocolbuffers.ParseError;
+import com.kylekewley.piclient.protocolbuffers.Ping;
+import com.squareup.wire.Message;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -32,7 +33,7 @@ public class PiClientTest implements PiClientCallbacks {
     @Test
     public void testMessage() throws Exception {
 
-        PingProto.Ping ping = PingProto.Ping.newBuilder().setMessage("Hello World!").build();
+        Ping ping = new Ping.Builder().message("Hello World!").build();
         PiMessage message1 = new PiMessage(1, ping);
         message1.setMessageCallbacks(new PiMessageCallbacks() {
             @Override
@@ -41,7 +42,7 @@ public class PiClientTest implements PiClientCallbacks {
             }
 
             @Override
-            public void serverRepliedWithMessage(MessageLite response, PiMessage sentMessage) {
+            public void serverRepliedWithMessage(Message response, PiMessage sentMessage) {
                 System.out.println("Parsed message 1");
             }
 
@@ -51,21 +52,21 @@ public class PiClientTest implements PiClientCallbacks {
             }
 
             @Override
-            public void serverReturnedErrorForMessage(ParseErrorProto.ParseError parseError, PiMessage message) {
+            public void serverReturnedErrorForMessage(ParseError parseError, PiMessage message) {
 
             }
         });
         PiMessage message2 = new PiMessage(1, ping);
-        message2.setMessageCallbacks(new PiMessageCallbacks(PingProto.Ping.newBuilder()) {
+        message2.setMessageCallbacks(new PiMessageCallbacks(Ping.class) {
             @Override
             public void serverReturnedData(byte[] data, PiMessage message) {
 
             }
 
             @Override
-            public void serverRepliedWithMessage(MessageLite response, PiMessage sentMessage) {
-                PingProto.Ping ping = (PingProto.Ping)response;
-                System.out.println(ping.getMessage());
+            public void serverRepliedWithMessage(Message response, PiMessage sentMessage) {
+                Ping ping = (Ping)response;
+                System.out.println(ping.message);
 
                 mainThread.interrupt();
                 long sendEndTime = System.currentTimeMillis();
@@ -79,7 +80,7 @@ public class PiClientTest implements PiClientCallbacks {
             }
 
             @Override
-            public void serverReturnedErrorForMessage(ParseErrorProto.ParseError parseError, PiMessage message) {
+            public void serverReturnedErrorForMessage(ParseError parseError, PiMessage message) {
                 System.out.println("Server had trouble parsing message");
             }
         });

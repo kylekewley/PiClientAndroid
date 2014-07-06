@@ -1,7 +1,7 @@
 package com.kylekewley.piclient;
 
-import com.google.protobuf.MessageLite;
-import com.kylekewley.piclient.protocolbuffers.ParseErrorProto;
+import com.kylekewley.piclient.protocolbuffers.ParseError;
+import com.squareup.wire.Message;
 
 /**
  * Created by Kyle Kewley on 6/17/14.
@@ -13,7 +13,7 @@ import com.kylekewley.piclient.protocolbuffers.ParseErrorProto;
  */
 public abstract class PiMessageCallbacks {
 
-    private com.google.protobuf.GeneratedMessageLite.Builder builder;
+    private Class<? extends Message> messageClass;
 
 
     /**
@@ -29,25 +29,25 @@ public abstract class PiMessageCallbacks {
      * Initialize the PiMessageCallbacks object with the given builder.
      * A null builder will just send a byte array back.
      *
-     * @param builder The builder used to parse the server reply.
+     * @param messageClass The messageClass used to parse the server reply.
      */
-    public PiMessageCallbacks(com.google.protobuf.GeneratedMessageLite.Builder builder) {
-        this.builder = builder;
+    public PiMessageCallbacks(Class<? extends Message> messageClass) {
+        this.messageClass = messageClass;
     }
 
 
     /**
-     * @param builder   The builder used to parse the server reply.
+     * @param messageClass The messageClass used to parse the server reply.
      */
-    public void setBuilder(com.google.protobuf.GeneratedMessageLite.Builder builder) {
-        this.builder = builder;
+    public void setMessageClass(Class<? extends Message> messageClass) {
+        this.messageClass = messageClass;
     }
 
     /**
      * @return  The builder used to parse the server reply, or null.
      */
-    public com.google.protobuf.GeneratedMessageLite.Builder getBuilder() {
-        return builder;
+    public Class<? extends Message> getMessageClass() {
+        return messageClass;
     }
 
     /**
@@ -65,7 +65,7 @@ public abstract class PiMessageCallbacks {
      * @param response      The message that the server replied with.
      * @param sentMessage   The PiMessage object that is being replied to.
      */
-    public abstract void serverRepliedWithMessage(MessageLite response, PiMessage sentMessage);
+    public abstract void serverRepliedWithMessage(Message response, PiMessage sentMessage);
 
 
     /**
@@ -82,5 +82,5 @@ public abstract class PiMessageCallbacks {
      * @param parseError    The error message sent from the server.
      * @param message       The PiMessage object that is being replied to.
      */
-    public abstract void serverReturnedErrorForMessage(ParseErrorProto.ParseError parseError, PiMessage message);
+    public abstract void serverReturnedErrorForMessage(ParseError parseError, PiMessage message);
 }

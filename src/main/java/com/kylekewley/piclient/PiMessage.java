@@ -1,7 +1,8 @@
 package com.kylekewley.piclient;
 
-import com.google.protobuf.MessageLite;
-import com.kylekewley.piclient.protocolbuffers.PiHeaderProto;
+
+import com.kylekewley.piclient.protocolbuffers.PiHeader;
+import com.squareup.wire.Message;
 
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
@@ -34,7 +35,7 @@ public class PiMessage {
     private static int currentMessageId = 0;
 
     ///The header for the PiMessage
-    private PiHeaderProto.PiHeader.Builder piHeader;
+    private PiHeader piHeader;
 
     ///The data that the message will send
     private byte[] messageData;
@@ -74,12 +75,12 @@ public class PiMessage {
      * @param parserId  The ID set for the server side parser able to handle the message.
      * @param message   The message that will be sent to the server.
      */
-    public PiMessage(int parserId, MessageLite message) {
-        piHeader = PiHeaderProto.PiHeader.newBuilder();
-        piHeader.setParserID(parserId);
-        piHeader.setMessageLength(message.getSerializedSize());
-        piHeader.setSuccessResponse(true);
-        piHeader.setMessageID(getUniqueMessageId());
+    public PiMessage(int parserId, Message message) {
+        piHeader = new PiHeader.Builder()
+                .parserID(parserId)
+                .messageLength(message.getSerializedSize())
+                .successResponse(true)
+                .messageID(getUniqueMessageId()).build();
 
         messageData = message.toByteArray();
     }
@@ -91,11 +92,11 @@ public class PiMessage {
      * @param data      The data to send to the server.
      */
     public PiMessage(int parserId, byte[] data) {
-        piHeader = PiHeaderProto.PiHeader.newBuilder();
-        piHeader.setParserID(parserId);
-        piHeader.setMessageLength(data.length);
-        piHeader.setSuccessResponse(true);
-        piHeader.setMessageID(getUniqueMessageId());
+        piHeader = new PiHeader.Builder()
+                .parserID(parserId)
+                .messageLength(data.length)
+                .successResponse(true)
+                .messageID(getUniqueMessageId()).build();
 
         messageData = data;
     }
@@ -108,12 +109,11 @@ public class PiMessage {
      * @param parserId  The ID set for the server side parser able to handle the data.
      */
     public PiMessage(int parserId) {
-        piHeader = PiHeaderProto.PiHeader.newBuilder();
-        piHeader.setParserID(parserId);
-        piHeader.setMessageLength(0);
-        piHeader.setSuccessResponse(true);
-        piHeader.setMessageID(getUniqueMessageId());
-
+        piHeader = new PiHeader.Builder()
+                .parserID(parserId)
+                .messageLength(0)
+                .successResponse(true)
+                .messageID(getUniqueMessageId()).build();
     }
 
 
@@ -129,14 +129,13 @@ public class PiMessage {
      *
      */
     public void writeToOutputStream(OutputStream outputStream) throws IOException {
-        PiHeaderProto.PiHeader header = piHeader.build();
 
         //Write the header prefix
         DataOutputStream dataOutputStream = new DataOutputStream(outputStream);
-        dataOutputStream.writeShort(header.getSerializedSize());
+        dataOutputStream.writeShort(piHeader.getSerializedSize());
 
         //Write the header
-        header.writeTo(outputStream);
+        outputStream.write(piHeader.toByteArray());
 
         //Write the data
         outputStream.write(messageData);
@@ -161,7 +160,7 @@ public class PiMessage {
      * @return  The message ID.
      */
     public int getMessageId() {
-        return piHeader.getMessageID();
+        return piHeader.messageID;
     }
 
 
@@ -169,7 +168,7 @@ public class PiMessage {
      * @return  The total number of bytes needed to write the full PiMessage.
      */
     public int serializedSize() {
-        return HEADER_PREFIX_SIZE + piHeader.build().getSerializedSize() + messageData.length;
+        return HEADER_PREFIX_SIZE + piHeader.getSerializedSize() + messageData.length;
     }
 
 
@@ -199,11 +198,14 @@ public class PiMessage {
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream(serializedSize());
         DataOutputStream dataOutputStream = new DataOutputStream(outputStream);
 
-        PiHeaderProto.PiHeader header = piHeader.build();
-
         try {
-            dataOutputStream.writeShort((short) header.getSerializedSize());
-            header.writeTo(dataOutputStream);
+            //Write the header length prefix
+            dataOutputStream.writeShort((short) piHeader.getSerializedSize());
+
+            //Write the header
+            dataOutputStream.write(piHeader.toByteArray());
+
+            //Write the message
             dataOutputStream.write(messageData);
 
 
@@ -218,5 +220,15 @@ public class PiMessage {
         }catch (IOException e) {
             return null;
         }
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj instanceof PiMessage) {
+            PiMessage message = (PiMessage)obj;
+
+            return this.piHeader.equals(message.piHeader) && this.messageData.equals(message.messageData);
+        }
+        return false;
     }
 }

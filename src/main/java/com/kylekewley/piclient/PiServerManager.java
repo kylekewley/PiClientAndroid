@@ -1,8 +1,9 @@
 package com.kylekewley.piclient;
 
-import com.google.protobuf.InvalidProtocolBufferException;
-import com.kylekewley.piclient.protocolbuffers.PiHeaderProto;
 
+import com.kylekewley.piclient.protocolbuffers.PiHeader;
+
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 
@@ -38,7 +39,7 @@ public class PiServerManager {
     private ByteBuffer headerLengthBuffer = ByteBuffer.allocate(PiMessage.HEADER_PREFIX_SIZE);
 
     ///Used to store the PiHeader from the message.
-    private PiHeaderProto.PiHeader piHeader;
+    private PiHeader piHeader;
 
     ///Used to store the message data after we find out it's length.
     private byte[] messageData;
@@ -117,8 +118,8 @@ public class PiServerManager {
             if (currentHeaderLength == headerLength) {
                 //Got the full header
                 try {
-                    piHeader = PiHeaderProto.PiHeader.newBuilder().mergeFrom(messageData).build();
-                } catch (InvalidProtocolBufferException e) {
+                    piHeader = MessageWire.getInstance().parseFrom(messageData, PiHeader.class);
+                } catch (IOException e) {
                     return false;
                 }
                 messageData = null;
@@ -128,11 +129,11 @@ public class PiServerManager {
 
         if (messageStatus == MessageStatus.MESSAGE_STATUS_PARTIAL_MESSAGE) {
             if (messageData == null) {
-                messageData = new byte[piHeader.getMessageLength()];
+                messageData = new byte[piHeader.messageLength];
                 currentMessageLength = 0;
             }
 
-            int copyLength = piHeader.getMessageLength() - currentMessageLength;
+            int copyLength = piHeader.messageLength - currentMessageLength;
 
             if (copyLength > message.remaining())
                 copyLength = message.remaining();
@@ -141,18 +142,18 @@ public class PiServerManager {
 
             currentMessageLength += copyLength;
 
-            if (currentMessageLength == piHeader.getMessageLength()) {
+            if (currentMessageLength == piHeader.messageLength) {
                 //Got the full message
                 messageStatus = MessageStatus.MESSAGE_STATUS_NONE;
 
                 PiMessage previousMessage = null;
                 for (PiMessage piMessage : sentMessages) {
-                    if (piMessage.getMessageId() == piHeader.getMessageID()) {
+                    if (piMessage.getMessageId() == piHeader.messageID) {
                         previousMessage = piMessage;
                     }
                 }
 
-                if (previousMessage != null) {
+                if (previousMessage == null) {
                     piParser.parseData(messageData, piHeader);
                 }else {
                     piParser.parseData(messageData, piHeader, previousMessage);

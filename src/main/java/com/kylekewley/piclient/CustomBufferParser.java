@@ -1,30 +1,29 @@
 package com.kylekewley.piclient;
 
-import com.google.protobuf.InvalidProtocolBufferException;
-import com.google.protobuf.MessageLite;
+import com.squareup.wire.Message;
+import com.squareup.wire.Wire;
+
+import java.io.IOException;
 
 /**
  * Created by Kyle Kewley on 6/24/14.
  */
-public abstract class CustomBufferParser implements CustomParser {
-    private MessageLite.Builder parserBuilder;
+public abstract class CustomBufferParser<T extends Message> implements CustomParser {
+    private T message;
 
-    public CustomBufferParser() {
-        parserBuilder = getParserBuilder();
-    }
+    public CustomBufferParser() {}
 
-    abstract void parse(com.google.protobuf.MessageLite message);
-
-    abstract MessageLite.Builder getParserBuilder();
+    abstract void parse(Message message);
 
     @Override
     public void parse(byte[] data) {
-        parserBuilder.clear();
-        
+        System.out.println("Class of T: " + message.getClass());
+        Wire wire = new Wire();
         try {
-            parserBuilder.mergeFrom(data);
-            parse(parserBuilder.build());
-        }catch (InvalidProtocolBufferException e) {
+            message = (T)MessageWire.getInstance().parseFrom(data, message.getClass());
+
+            parse(message);
+        }catch (IOException e) {
             System.err.println(e.getMessage());
         }
 

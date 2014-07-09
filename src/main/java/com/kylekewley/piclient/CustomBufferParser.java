@@ -13,14 +13,14 @@ public abstract class CustomBufferParser<T extends Message> implements CustomPar
 
     public CustomBufferParser() {}
 
-    abstract void parse(Message message);
+    public abstract void parse(T message);
 
     @Override
     public void parse(byte[] data) {
-        System.out.println("Class of T: " + message.getClass());
-        Wire wire = new Wire();
+
+        Wire wire = MessageWire.getInstance();
         try {
-            message = (T)MessageWire.getInstance().parseFrom(data, message.getClass());
+            message = (T)wire.parseFrom(data, message.getClass());
 
             parse(message);
         }catch (IOException e) {

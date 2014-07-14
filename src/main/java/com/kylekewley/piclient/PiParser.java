@@ -78,14 +78,14 @@ public class PiParser {
 
 
     /**
-     *Register a custom parser for a given parserID range.
+     *Register a custom parser for the parserID encapsulated by the CustomParserWrapper object.
      *All incoming messages with a PiHeader.parserID in the given range
      *will be passed along to the given custom parser to parse.
      *No intersecting ranges are allowed.
      *
      * @param customParser  The parser that will be registered.
      *
-     *@return   true if the range is unique, false otherwise
+     *@return   true if the range is unique, false otherwise.
      */
     public boolean registerParserForId(CustomParserWrapper customParser) {
         if (customParser.getParser() == null)
@@ -94,6 +94,17 @@ public class PiParser {
         return parsers.add(customParser);
     }
 
+    /**
+     * Register a custom parser for the given parserID.
+     *
+     * @param customParser  The parser that will be registered.
+     * @param parserId      The ID to register the parser for.
+     *
+     * @return  True if the ID is unique, false otherwise.
+     */
+    public boolean registerParserForId(CustomParser customParser, int parserId) {
+        return registerParserForId(new CustomParserWrapper(customParser, parserId));
+    }
 
     /**
      * Iterates through the parsers set looking for a parser that is equal to parserWrapper.

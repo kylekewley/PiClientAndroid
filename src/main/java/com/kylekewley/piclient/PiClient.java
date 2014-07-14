@@ -148,6 +148,13 @@ public class PiClient implements PiClientCallbacks {
 
 
     /**
+     * @return  A not-null piParser object used for parsing incoming data.
+     */
+    public PiParser getPiParser() {
+        return piParser;
+    }
+
+    /**
      * @return  true if the PiClient is currently connected to the server.
      */
     public boolean isConnected() {

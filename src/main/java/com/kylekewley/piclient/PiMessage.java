@@ -99,6 +99,7 @@ public class PiMessage {
                 .messageID(getUniqueMessageId()).build();
 
         messageData = data;
+        if (messageData == null) messageData = new byte[0];
     }
 
     /**
@@ -114,6 +115,7 @@ public class PiMessage {
                 .messageLength(0)
                 .successResponse(true)
                 .messageID(getUniqueMessageId()).build();
+        messageData = new byte[0];
     }
 
 
@@ -168,6 +170,7 @@ public class PiMessage {
      * @return  The total number of bytes needed to write the full PiMessage.
      */
     public int serializedSize() {
+
         return HEADER_PREFIX_SIZE + piHeader.getSerializedSize() + messageData.length;
     }
 

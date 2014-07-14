@@ -489,7 +489,6 @@ public class PiClient implements PiClientCallbacks {
                 //Set non-blocking mode
                 socket.configureBlocking(false);
 
-                socket.setOption(StandardSocketOptions.SO_REUSEADDR, true);
                 //Connect
                 socket.connect(address);
 
@@ -566,6 +565,8 @@ public class PiClient implements PiClientCallbacks {
             try {
                 //Loop until connected or interrupted
                 while (!socket.finishConnect() && !Thread.interrupted());
+            } catch (ConnectException e) {
+                clientCallbacks.clientRaisedError(PiClient.this, ClientErrorCode.CONNECTION_REFUSED);
             } catch (Exception e) {
                 clientCallbacks.clientRaisedError(PiClient.this, ClientErrorCode.UNKNOWN_CONNECTION_ERROR);
                 return false;

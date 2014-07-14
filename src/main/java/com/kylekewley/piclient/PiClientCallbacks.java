@@ -5,16 +5,16 @@ package com.kylekewley.piclient;
  */
 public interface PiClientCallbacks {
     enum ClientErrorCode {
-        DISCONNECTED_CLIENT ("The client is disconnected and unable to send data."),
-        INVALID_PORT ("The port number must be between 0 and 65535."),
-        INVALID_HOSTNAME ("The PiClient was unable to resolve the hostname"),
-        SECURITY_EXCEPTION ("The PiClient was unable to resolve the hostname because security manager is present and permission to resolve the host name is denied."),
-        UNKNOWN_CONNECTION_ERROR ("An unknown error occurred while trying to connect. Please check your hostname and IP address."),
-        CONNECTION_TIMEOUT ("The connection timed out while trying to connect to the PiServer"),
-        CONNECTION_REFUSED ("Unable to connect. Please check that the server is running on the specified port and IP address"),
-        UNABLE_TO_SEND_MESSAGE ("An error occurred while trying to send the message."),
-        SOCKET_CONFIGURATION_ERROR ("The socket is not configured properly and cannot connect to the server."),
-        UNABLE_TO_READ_MESSAGE ("Unable to read the message from the server.");
+        DISCONNECTED_CLIENT ("Error: The client is disconnected and unable to send data."),
+        INVALID_PORT ("Error: The port number must be between 0 and 65535."),
+        INVALID_HOSTNAME ("Error: The PiClient was unable to resolve the hostname"),
+        SECURITY_EXCEPTION ("Error: The PiClient was unable to resolve the hostname because security manager is present and permission to resolve the host name is denied."),
+        UNKNOWN_CONNECTION_ERROR ("Error: An unknown problem occurred while trying to connect. Please check your hostname and IP address."),
+        CONNECTION_TIMEOUT ("Error: The connection timed out while trying to connect to the PiServer."),
+        CONNECTION_REFUSED ("Error: Unable to connect. Please check that the server is running on the specified port and IP address."),
+        UNABLE_TO_SEND_MESSAGE ("Error: The PiClient was unable to send the message."),
+        SOCKET_CONFIGURATION_ERROR ("Error: The socket is not configured properly and cannot connect to the server."),
+        UNABLE_TO_READ_MESSAGE ("Error: Unable to read the message from the server.");
 
         private String errorMessage;
 

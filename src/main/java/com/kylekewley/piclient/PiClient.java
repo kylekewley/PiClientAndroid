@@ -72,6 +72,8 @@ public class PiClient implements PiClientCallbacks {
     ///The PiServerManager for this client instance
     private PiServerManager serverManager = new PiServerManager(piParser);
 
+    ///The queue to keep messages even if the PiClient isn't connected
+    private ArrayList<PiMessage> backupMessageList = new ArrayList<PiMessage>();
     /*
     Class Constructors
      */
@@ -210,6 +212,11 @@ public class PiClient implements PiClientCallbacks {
 
         //Data is fine as far as we can tell. Create and run the new thread.
         clientHelper = new PiClientHelper(hostName, port);
+        for (PiMessage message : backupMessageList) {
+            clientHelper.sendMessage(message);
+        }
+        backupMessageList.clear();
+
         clientHelperThread = new Thread(clientHelper);
         clientHelperThread.start();
 
@@ -230,6 +237,7 @@ public class PiClient implements PiClientCallbacks {
      * by calling any of the connectToPiServer methods.
      */
     public void close() {
+        //TODO: Add clientHelper messages to the backupMessageList
         if (clientHelper != null && clientHelper.isConnected() && clientHelperThread != null) {
             clientHelper.close();
 
@@ -256,8 +264,11 @@ public class PiClient implements PiClientCallbacks {
      * @param message   The message to send to the server.
      */
     public void sendMessage(PiMessage message) {
-        if (clientHelper != null && message != null)
+        if (message == null) return;
+        if (clientHelper != null)
             clientHelper.sendMessage(message);
+        else
+            backupMessageList.add(message); //Will be send as soon as the clientHelper is created.
     }
 
 
@@ -430,7 +441,7 @@ public class PiClient implements PiClientCallbacks {
          * @param message   The message to send to the server.
          */
         public void sendMessage(PiMessage message) {
-            if (clientHelperThread.isInterrupted()) {
+            if (clientHelperThread != null && clientHelperThread.isInterrupted()) {
                 //We are closed
                 clientCallbacks.clientRaisedError(PiClient.this, ClientErrorCode.DISCONNECTED_CLIENT);
                 return;

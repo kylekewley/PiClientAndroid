@@ -5,6 +5,9 @@ import com.kylekewley.piclient.protocolbuffers.ParseError;
 import com.kylekewley.piclient.protocolbuffers.PiHeader;
 import com.squareup.wire.Message;
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 import java.io.IOException;
 import java.util.TreeSet;
 /**
@@ -13,7 +16,7 @@ import java.util.TreeSet;
 public class PiParser {
 
     ///Set of all registered parsers
-    private TreeSet<CustomParserWrapper> parsers = new TreeSet<CustomParserWrapper>();
+    private final TreeSet<CustomParserWrapper> parsers = new TreeSet<CustomParserWrapper>();
 
 
     /**
@@ -22,7 +25,7 @@ public class PiParser {
      * @param messageData   The messageData to parse.
      * @param piHeader      The piHeader from the data.
      */
-    public void parseData(byte[] messageData, PiHeader piHeader) {
+    public void parseData(byte[] messageData, @NotNull PiHeader piHeader) {
         CustomParserWrapper tmpWrapper = new CustomParserWrapper(piHeader.parserID);
 
         CustomParserWrapper parserWrapper = findParserWrapper(tmpWrapper);
@@ -43,7 +46,7 @@ public class PiParser {
      * @param piHeader          The piHeader from the data.
      * @param previousMessage   The message the data is replying to.
      */
-    public void parseData(byte[] messageData, PiHeader piHeader, PiMessage previousMessage) {
+    public void parseData(byte[] messageData, @NotNull PiHeader piHeader, @NotNull PiMessage previousMessage) {
         Class<? extends Message> messageClass = previousMessage.getMessageCallbacks().getMessageClass();
 
         if (piHeader.messageLength == 0) {
@@ -87,7 +90,7 @@ public class PiParser {
      *
      *@return   true if the range is unique, false otherwise.
      */
-    public boolean registerParserForId(CustomParserWrapper customParser) {
+    public boolean registerParserForId(@NotNull CustomParserWrapper customParser) {
         if (customParser.getParser() == null)
             return false;
 
@@ -112,6 +115,7 @@ public class PiParser {
      * @param parserWrapper     The CustomParserWrapper to search for.
      * @return  The equal CustomParserWrapper from the parsers set, or null if not found.
      */
+    @Nullable
     private CustomParserWrapper findParserWrapper(CustomParserWrapper parserWrapper) {
         if (parsers == null)
             return null;

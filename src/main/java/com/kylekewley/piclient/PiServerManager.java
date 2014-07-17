@@ -3,6 +3,9 @@ package com.kylekewley.piclient;
 
 import com.kylekewley.piclient.protocolbuffers.PiHeader;
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -30,6 +33,7 @@ public class PiServerManager {
      */
 
     ///Variable to keep track of which part of the message we are reading.
+    @NotNull
     private MessageStatus messageStatus = MessageStatus.MESSAGE_STATUS_NONE;
 
     ///Used to store the headerLength after enough data is parsed.
@@ -42,6 +46,7 @@ public class PiServerManager {
     private PiHeader piHeader;
 
     ///Used to store the message data after we find out it's length.
+    @Nullable
     private byte[] messageData;
 
     ///The number of bytes actually stored for the header
@@ -72,7 +77,7 @@ public class PiServerManager {
      *
      * @return  true if the message was parsed successfully, false if there was an error parsing out a header.
      */
-    public boolean serverSentMessage(ByteBuffer message, ArrayList<PiMessage> sentMessages) {
+    public boolean serverSentMessage(@NotNull ByteBuffer message, @NotNull ArrayList<PiMessage> sentMessages) {
         if (messageStatus == MessageStatus.MESSAGE_STATUS_NONE) {
             //Parse the headerLength
             while (headerLengthBuffer.hasRemaining() &&

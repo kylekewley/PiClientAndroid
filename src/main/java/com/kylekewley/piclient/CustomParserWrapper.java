@@ -9,10 +9,10 @@ public class CustomParserWrapper implements Comparable{
     private CustomParser parser;
 
     ///The start value for the parserID
-    private int startValue;
+    private final int startValue;
 
     ///The end value for the parserID
-    private int endValue;
+    private final int endValue;
 
     /**
      * Create a CustomParserWrapper with the given parser, startParserID and endParserID.

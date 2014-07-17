@@ -1,5 +1,8 @@
 package com.kylekewley.piclient;
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 import java.io.IOException;
 import java.net.ConnectException;
 import java.net.InetSocketAddress;
@@ -54,9 +57,11 @@ public class PiClient implements PiClientCallbacks {
 
 
     ///The PiClientHelper running on a secondary thread.
+    @Nullable
     private PiClientHelper clientHelper;
 
     ///The Thread object that is running the PiClientHelper.
+    @Nullable
     private Thread clientHelperThread;
 
 
@@ -67,13 +72,14 @@ public class PiClient implements PiClientCallbacks {
     private int port;
 
     ///The PiParser for the client instance.
-    private PiParser piParser = new PiParser();
+    private final PiParser piParser = new PiParser();
 
     ///The PiServerManager for this client instance
+    @NotNull
     private PiServerManager serverManager = new PiServerManager(piParser);
 
     ///The queue to keep messages even if the PiClient isn't connected
-    private ArrayList<PiMessage> backupMessageList = new ArrayList<PiMessage>();
+    private final ArrayList<PiMessage> backupMessageList = new ArrayList<PiMessage>();
     /*
     Class Constructors
      */
@@ -152,6 +158,7 @@ public class PiClient implements PiClientCallbacks {
     /**
      * @return  A not-null piParser object used for parsing incoming data.
      */
+    @NotNull
     public PiParser getPiParser() {
         return piParser;
     }
@@ -194,7 +201,7 @@ public class PiClient implements PiClientCallbacks {
      * @param hostName  The IP address.
      * @param port      The port number.
      */
-    public void connectToPiServer(String hostName, int port) {
+    public void connectToPiServer(@Nullable String hostName, int port) {
 
         //Make sure the port is valid
         if (port <= 0 || port > MAX_PORT) {
@@ -263,7 +270,7 @@ public class PiClient implements PiClientCallbacks {
      *
      * @param message   The message to send to the server.
      */
-    public void sendMessage(PiMessage message) {
+    public void sendMessage(@Nullable PiMessage message) {
         if (message == null) return;
         if (clientHelper != null)
             clientHelper.sendMessage(message);
@@ -329,12 +336,12 @@ public class PiClient implements PiClientCallbacks {
     }
 
     @Override
-    public void clientRaisedError(PiClient piClient, ClientErrorCode error) {
+    public void clientRaisedError(PiClient piClient, @NotNull ClientErrorCode error) {
         System.out.println(error.getErrorMessage());
     }
 
     @Override
-    public void clientRaisedError(PiClient piClient, Exception error) {
+    public void clientRaisedError(PiClient piClient, @NotNull Exception error) {
         System.out.print(error.getMessage());
     }
 
@@ -348,13 +355,13 @@ public class PiClient implements PiClientCallbacks {
         private SocketChannel socket;
 
         ///The buffer to use for incoming data
-        private ByteBuffer inBuffer;
+        private final ByteBuffer inBuffer;
 
         ///The queue of messages for the PiClient to send to the server
-        private ConcurrentLinkedQueue<PiMessage> messageQueue = new ConcurrentLinkedQueue<PiMessage>();
+        private final ConcurrentLinkedQueue<PiMessage> messageQueue = new ConcurrentLinkedQueue<PiMessage>();
 
         ///The list that holds sent messages waiting for a reply
-        private ArrayList<PiMessage> sentMessages = new ArrayList<PiMessage>();
+        private final ArrayList<PiMessage> sentMessages = new ArrayList<PiMessage>();
 
         /*
         Constructors
@@ -535,6 +542,7 @@ public class PiClient implements PiClientCallbacks {
          *
          * @return      A resolved InetSocketAddress, or null if there was a problem creating the socket address.
          */
+        @Nullable
         private InetSocketAddress resolveSocketAddress(String hostName, int port) {
             try {
                 InetSocketAddress socketAddress = new InetSocketAddress(hostName, port);

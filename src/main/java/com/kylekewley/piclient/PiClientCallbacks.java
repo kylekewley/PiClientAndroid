@@ -16,7 +16,7 @@ public interface PiClientCallbacks {
         SOCKET_CONFIGURATION_ERROR ("Error: The socket is not configured properly and cannot connect to the server."),
         UNABLE_TO_READ_MESSAGE ("Error: Unable to read the message from the server.");
 
-        private String errorMessage;
+        private final String errorMessage;
 
         ClientErrorCode(String errorMessage) {
             this.errorMessage= errorMessage;

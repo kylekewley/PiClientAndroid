@@ -4,6 +4,8 @@ import com.kylekewley.piclient.PiClientCallbacks;
 import com.kylekewley.piclient.protocolbuffers.ParseError;
 import com.kylekewley.piclient.protocolbuffers.Ping;
 import com.squareup.wire.Message;
+
+import org.jetbrains.annotations.NotNull;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -122,13 +124,13 @@ public class PiClientTest implements PiClientCallbacks {
     }
 
     @Override
-    public void clientRaisedError(PiClient piClient, ClientErrorCode error) {
+    public void clientRaisedError(PiClient piClient, @NotNull ClientErrorCode error) {
         System.out.println(error.getErrorMessage());
         mainThread.interrupt();
     }
 
     @Override
-    public void clientRaisedError(PiClient piClient, Exception error) {
+    public void clientRaisedError(PiClient piClient, @NotNull Exception error) {
         System.out.print("Failed with exception: " + error.getClass().toString() + " : ");
         System.out.println(error.getMessage());
         mainThread.interrupt();

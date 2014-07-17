@@ -4,11 +4,15 @@ package com.kylekewley.piclient;
 import com.kylekewley.piclient.protocolbuffers.PiHeader;
 import com.squareup.wire.Message;
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
+import java.util.Arrays;
 
 /**
  * Created by Kyle Kewley on 6/14/14.
@@ -44,6 +48,7 @@ public class PiMessage {
     private PiMessageCallbacks messageCallbacks;
 
     ///The ByteBuffer used to store and send data to the server
+    @Nullable
     private ByteBuffer byteBuffer;
 
     /*
@@ -75,7 +80,7 @@ public class PiMessage {
      * @param parserId  The ID set for the server side parser able to handle the message.
      * @param message   The message that will be sent to the server.
      */
-    public PiMessage(int parserId, Message message) {
+    public PiMessage(int parserId, @NotNull Message message) {
         piHeader = new PiHeader.Builder()
                 .parserID(parserId)
                 .messageLength(message.getSerializedSize())
@@ -91,7 +96,7 @@ public class PiMessage {
      * @param parserId  The ID set for the server side parser able to handle the data.
      * @param data      The data to send to the server.
      */
-    public PiMessage(int parserId, byte[] data) {
+    public PiMessage(int parserId, @NotNull byte[] data) {
         piHeader = new PiHeader.Builder()
                 .parserID(parserId)
                 .messageLength(data.length)
@@ -99,7 +104,6 @@ public class PiMessage {
                 .messageID(getUniqueMessageId()).build();
 
         messageData = data;
-        if (messageData == null) messageData = new byte[0];
     }
 
     /**
@@ -130,7 +134,7 @@ public class PiMessage {
      * @param outputStream  The stream to write the data to.
      *
      */
-    public void writeToOutputStream(OutputStream outputStream) throws IOException {
+    public void writeToOutputStream(@NotNull OutputStream outputStream) throws IOException {
 
         //Write the header prefix
         DataOutputStream dataOutputStream = new DataOutputStream(outputStream);
@@ -151,6 +155,7 @@ public class PiMessage {
      *
      * @return A ByteBuffer object with the message data or null if there was an error while creating the ByteBuffer
      */
+    @Nullable
     public ByteBuffer getByteBuffer() {
         if (byteBuffer == null)
             byteBuffer = getByteBufferHelper();
@@ -197,6 +202,7 @@ public class PiMessage {
     /**
      * @return A new ByteBuffer with the message data or null if there was an error creating the byte buffer.
      */
+    @Nullable
     private ByteBuffer getByteBufferHelper() {
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream(serializedSize());
         DataOutputStream dataOutputStream = new DataOutputStream(outputStream);
@@ -230,7 +236,7 @@ public class PiMessage {
         if (obj instanceof PiMessage) {
             PiMessage message = (PiMessage)obj;
 
-            return this.piHeader.equals(message.piHeader) && this.messageData.equals(message.messageData);
+            return this.piHeader.equals(message.piHeader) && Arrays.equals(this.messageData, message.messageData);
         }
         return false;
     }

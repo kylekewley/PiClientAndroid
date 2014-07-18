@@ -1,5 +1,9 @@
 package com.kylekewley.piclient;
 
+import com.kylekewley.piclient.protocolbuffers.GroupRegistration;
+import com.kylekewley.piclient.protocolbuffers.ParseError;
+import com.squareup.wire.Message;
+
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -287,7 +291,33 @@ public class PiClient implements PiClientCallbacks {
      * @param groupName The group name to add the client to.
      */
     public void addToGroup(String groupName) {
-        //TODO: implement method
+        //TODO: Do something with the result.
+        GroupRegistration groupRegistration = new GroupRegistration(groupName, true, 0, null);
+        PiMessage message = new PiMessage(Constants.ServerDefaultParserId.GROUP_REGISTRATION_ID.getId(), groupRegistration);
+
+        message.setMessageCallbacks(new PiMessageCallbacks() {
+            @Override
+            public void serverReturnedData(byte[] data, PiMessage message) {
+
+            }
+
+            @Override
+            public void serverRepliedWithMessage(Message response, PiMessage sentMessage) {
+
+            }
+
+            @Override
+            public void serverSuccessfullyParsedMessage(PiMessage message) {
+
+            }
+
+            @Override
+            public void serverReturnedErrorForMessage(ParseError parseError, PiMessage message) {
+
+            }
+        });
+
+        sendMessage(message);
     }
 
     /**
@@ -298,7 +328,34 @@ public class PiClient implements PiClientCallbacks {
      * @param groupName The group name to remove the client from.
      */
     public void removeFromGroup(String groupName) {
-        //TODO: implement method
+        //TODO: Do something with the result.
+        GroupRegistration groupRegistration = new GroupRegistration(groupName, true, 0, null);
+        PiMessage message = new PiMessage(Constants.ServerDefaultParserId.GROUP_REGISTRATION_ID.getId(), groupRegistration);
+
+        message.setMessageCallbacks(new PiMessageCallbacks() {
+            @Override
+            public void serverReturnedData(byte[] data, PiMessage message) {
+
+            }
+
+            @Override
+            public void serverRepliedWithMessage(Message response, PiMessage sentMessage) {
+
+            }
+
+            @Override
+            public void serverSuccessfullyParsedMessage(PiMessage message) {
+
+            }
+
+            @Override
+            public void serverReturnedErrorForMessage(ParseError parseError, PiMessage message) {
+
+            }
+        });
+
+        sendMessage(message);
+
 
     }
 
@@ -460,25 +517,6 @@ public class PiClient implements PiClientCallbacks {
         /*
         Private Methods
          */
-
-
-        /**
-         * Adds the PiClient to the group on the PiServer.
-         *
-         * @param groupName The group name to add the client to.
-         */
-        private void addToGroup(String groupName) {
-            //TODO: implement method
-        }
-
-        /**
-         * Removes the PiClient from the group on the PiServer.
-         *
-         * @param groupName The group name to remove the client from.
-         */
-        private void removeFromGroup(String groupName) {
-            //TODO: implement method
-        }
 
 
         /**

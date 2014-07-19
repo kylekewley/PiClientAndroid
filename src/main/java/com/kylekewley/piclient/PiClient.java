@@ -256,6 +256,9 @@ public class PiClient implements PiClientCallbacks {
                 clientHelperThread.join(DEFAULT_THREAD_TIMEOUT);
             }catch (Exception e) {
                 System.out.println("Exception while joining client helper thread: " + e.getMessage());
+            }finally {
+                clientHelper = null;
+                clientHelperThread = null;
             }
 
         }

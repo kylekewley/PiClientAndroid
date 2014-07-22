@@ -672,12 +672,15 @@ public class PiClient implements PiClientCallbacks {
                 try {
                     if (socket.read(inBuffer) > 0) {
                         inBuffer.flip();
-                        boolean status = serverManager.serverSentMessage(inBuffer, sentMessages);
-                        inBuffer.clear();
 
-                        if (status == false) {
-                            clientCallbacks.clientRaisedError(PiClient.this, ClientErrorCode.UNABLE_TO_READ_MESSAGE);
+                        while (inBuffer.remaining() > 0) {
+                            boolean status = serverManager.serverSentMessage(inBuffer, sentMessages);
+
+                            if (!status) {
+                                clientCallbacks.clientRaisedError(PiClient.this, ClientErrorCode.UNABLE_TO_READ_MESSAGE);
+                            }
                         }
+                        inBuffer.clear();
                     }
                 } catch (IOException e) {
                     System.err.println("Error reading data...");

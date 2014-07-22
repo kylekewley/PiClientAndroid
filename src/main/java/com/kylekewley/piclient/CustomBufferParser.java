@@ -9,9 +9,11 @@ import java.io.IOException;
  * Created by Kyle Kewley on 6/24/14.
  */
 public abstract class CustomBufferParser<T extends Message> implements CustomParser {
-    private T message;
+    private Class<T> messageClass;
 
-    public CustomBufferParser() {}
+    public CustomBufferParser(Class<T> messageClass) {
+        this.messageClass = messageClass;
+    }
 
     public abstract void parse(T message);
 
@@ -20,9 +22,7 @@ public abstract class CustomBufferParser<T extends Message> implements CustomPar
 
         Wire wire = MessageWire.getInstance();
         try {
-            message = (T)wire.parseFrom(data, message.getClass());
-
-            parse(message);
+            parse(wire.parseFrom(data, messageClass));
         }catch (IOException e) {
             System.err.println(e.getMessage());
         }
